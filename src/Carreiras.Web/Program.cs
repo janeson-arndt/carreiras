@@ -13,6 +13,7 @@ builder.Services.AddCarreirasInfra(builder.Configuration);
 builder.Services.Configure<EmailOpcoes>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<GestaoUsuarios>();
+builder.Services.AddScoped<Carreiras.Infra.Vagas.VagaServico>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioAuditoria, UsuarioAuditoriaHttp>();
 

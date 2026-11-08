@@ -228,3 +228,16 @@ Fontes: **Exo 2** (títulos, pesos 600/700/800) e **Source Sans 3** (texto, 400/
 3. Fazer as perguntas da seção 11 e propor a estrutura da solução e o plano da **Entrega 02**.
 4. Criar a solução, configurar Identity, o `DbContext`, o interceptador de auditoria e as políticas de perfil **antes** das telas.
 5. Implementar a Entrega 02 e rodar os testes da seção 10 antes de partir para a 03.
+
+## 13. Como rodar os testes (adicionado na Entrega 02)
+
+Os testes de integração usam SQL Server real e **recriam o banco `RH_METISA_TESTE`** a cada execução a partir de `db/001` e `db/002` (o `RH_METISA` de desenvolvimento nunca é tocado). Defina a conexão com permissão de criar banco (não grave em arquivo):
+
+```bash
+export CARREIRAS_TESTE_ADMIN_CS='Server=<instância>;User Id=<login com permissão>;Password=<senha>;TrustServerCertificate=True'
+dotnet test tests/Carreiras.Testes
+```
+
+- `sqlcmd` precisa de `-I` (QUOTED_IDENTIFIER ligado) para rodar os scripts 001/002 por linha de comando; o SSMS já liga.
+- `dotnet ef` usa a variável `CARREIRAS_MIGRATION_CS` (conexão com DDL) via `IDesignTimeDbContextFactory`; há dois contextos: `AppDbContext` (negócio, migração inicial vazia) e `AuthDbContext` (Identity).
+- Primeiro administrador / recuperação: `dotnet user-secrets set "Admin:Senha" "<senha>" --project src/Carreiras.Web` e `ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Carreiras.Web -- criar-admin "Nome" email@exemplo.com`.

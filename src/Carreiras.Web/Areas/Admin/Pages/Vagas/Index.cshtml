@@ -1,4 +1,107 @@
 @page "/admin/vagas"
 @model Carreiras.Web.Areas.Admin.Pages.Vagas.IndexModel
-@{ ViewData["Title"] = "Vagas"; ViewData["Menu"] = "vagas"; }
-<h1 class="h3">Vagas</h1>
+@using Carreiras.Dominio.Vagas
+@{
+    ViewData["Title"] = "Vagas";
+    ViewData["Menu"] = "vagas";
+    string Rotulo(string s) => s switch { "RASCUNHO" => "Rascunho", "PUBLICADA" => "Publicada", "PAUSADA" => "Pausada", _ => "Encerrada" };
+    string Classe(string s) => s switch { "PUBLICADA" => "", "PAUSADA" => "pendente", _ => "inativo" };
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Vagas</h1>
+    @if (Model.PodeGerenciar)
+    {
+        <a class="btn btn-primary" asp-page="Editar">Nova vaga</a>
+    }
+</div>
+
+<form method="get" class="cartao p-3 mb-3 d-flex flex-wrap gap-2 align-items-end" role="search">
+    <div>
+        <label class="form-label mb-1" for="busca">Buscar pelo título</label>
+        <input class="form-control" id="busca" name="busca" value="@Model.Busca" />
+    </div>
+    <div>
+        <label class="form-label mb-1" for="status">Situação</label>
+        <select class="form-select" id="status" name="status">
+            <option value="">Todas</option>
+            @foreach (var s in new[] { "RASCUNHO", "PUBLICADA", "PAUSADA", "ENCERRADA" })
+            {
+                <option value="@s" selected="@(Model.Status == s)">@Rotulo(s)</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label mb-1" for="unidadeId">Unidade</label>
+        <select class="form-select" id="unidadeId" name="unidadeId">
+            <option value="">Todas</option>
+            @foreach (var u in Model.Unidades)
+            {
+                <option value="@u.Id" selected="@(Model.UnidadeId == u.Id)">@u.Nome</option>
+            }
+        </select>
+    </div>
+    <button class="btn btn-neutro" type="submit">Filtrar</button>
+</form>
+
+<p aria-live="polite" class="text-secundario">@Model.Itens.Count @(Model.Itens.Count == 1 ? "vaga" : "vagas")</p>
+
+@if (Model.Itens.Count == 0)
+{
+    <div class="cartao p-4 text-center">
+        <p class="mb-2">Nenhuma vaga com esses filtros.</p>
+        <a asp-page="Index">Limpar filtros</a>
+    </div>
+}
+else
+{
+<div class="cartao">
+    <div class="table-responsive" style="overflow: visible">
+    <table class="table align-middle mb-0">
+        <caption class="visually-hidden">Vagas</caption>
+        <thead>
+            <tr><th scope="col">Vaga</th><th scope="col">Situação</th><th scope="col">Unidade</th><th scope="col">Turno</th><th scope="col">Candidaturas</th><th scope="col" class="text-end">Ações</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var v in Model.Itens)
+        {
+            <tr>
+                <td><strong>@v.Titulo</strong><br /><small class="text-secundario">/vagas/@v.Slug</small></td>
+                <td><span class="etiqueta @Classe(v.Status)">@Rotulo(v.Status)</span></td>
+                <td>@v.Unidade<br /><small class="text-secundario">@v.Area</small></td>
+                <td>@v.Turno</td>
+                <td>@v.Candidaturas</td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@v.Id">@(Model.PodeGerenciar && v.Status != "ENCERRADA" ? "Editar" : "Ver")</a>
+                    @if (Model.PodeGerenciar)
+                    {
+                        var destinos = StatusVaga.Destinos(v.Status);
+                        <div class="acoes">
+                            <button type="button" class="btn btn-sm btn-neutro" data-acoes aria-expanded="false" aria-controls="acoes-@v.Id">Ações</button>
+                            <div class="acoes-lista text-start" id="acoes-@v.Id" hidden>
+                                @if (destinos.Contains(StatusVaga.Publicada))
+                                {
+                                    <form method="post" asp-page-handler="Status" asp-route-id="@v.Id" asp-route-novo="PUBLICADA"><button type="submit">@(v.Status == "PAUSADA" ? "Reativar" : "Publicar")</button></form>
+                                }
+                                @if (destinos.Contains(StatusVaga.Pausada))
+                                {
+                                    <form method="post" asp-page-handler="Status" asp-route-id="@v.Id" asp-route-novo="PAUSADA"><button type="submit">Pausar</button></form>
+                                }
+                                <form method="post" asp-page-handler="Duplicar" asp-route-id="@v.Id"><button type="submit">Duplicar</button></form>
+                                @if (destinos.Contains(StatusVaga.Encerrada))
+                                {
+                                    <hr />
+                                    <form method="post" asp-page-handler="Status" asp-route-id="@v.Id" asp-route-novo="ENCERRADA">
+                                        <button type="submit" class="perigo" data-confirmar="Encerrar a vaga @v.Titulo? Ela não poderá ser reaberta; para voltar, duplique.">Encerrar</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+</div>
+}

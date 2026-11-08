@@ -95,14 +95,17 @@ public sealed class AuditoriaInterceptor : SaveChangesInterceptor
             }
             else if (entry.Entity is VagaRequisito or VagaAtividade or VagaDiferencial)
             {
-                if (entry.State is EntityState.Added or EntityState.Deleted or EntityState.Modified)
+                // vaga nova: o id ainda é provisório; só "(criado)" é registrado
+                if (entry.State is EntityState.Added or EntityState.Deleted or EntityState.Modified
+                    && !entry.Property("VagaId").IsTemporary)
                 {
                     var (lista, vagaId, texto) = DadosLista(entry);
                     Acumular(listas, vagaId, lista, entry, texto);
                 }
             }
             else if (entry.Metadata.Name == "VagaBeneficio" &&
-                     entry.State is EntityState.Added or EntityState.Deleted)
+                     entry.State is EntityState.Added or EntityState.Deleted &&
+                     !entry.Property("VagaId").IsTemporary)
             {
                 var vagaId = (int)entry.Property("VagaId").CurrentValue!;
                 var benId = (int)entry.Property("BeneficioId").CurrentValue!;
