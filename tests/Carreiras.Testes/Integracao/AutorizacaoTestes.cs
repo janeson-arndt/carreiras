@@ -180,6 +180,85 @@ FROM dbo.Unidade u, dbo.Area a, dbo.Turno t, dbo.TipoContrato c, dbo.Modalidade 
         else { Assert.True(Negado(r)); Assert.Equal("Vaga de autorização", titulo); }
     }
 
+    // RN13: Benefícios e Programas são do administrador; ANALISTA e LEITURA só consultam.
+    [Theory]
+    [InlineData(Perfis.Administrador)]
+    [InlineData(Perfis.Analista)]
+    [InlineData(Perfis.Leitura)]
+    public async Task Todos_os_perfis_consultam_beneficios_e_programas(string perfil)
+    {
+        var c = await LogadoComoAsync(perfil);
+        foreach (var url in new[] { "/admin/beneficios", "/admin/programas", "/admin/beneficios/editar/1", "/admin/programas/editar/1" })
+            Assert.Equal(HttpStatusCode.OK, (await c.GetAsync(url)).StatusCode);
+    }
+
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Editar_beneficio_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var id = await _b.Escalar<int>("SELECT MIN(Id) FROM dbo.Beneficio WHERE Nome=N'Vale-transporte'");
+        var cat = await _b.Escalar<int>($"SELECT CategoriaId FROM dbo.Beneficio WHERE Id={id}");
+        var desc = "descricao-" + perfil;
+        var c = await LogadoComoAsync(perfil);
+        var r = await PostAsync(c, $"/admin/beneficios/editar/{id}", $"/admin/beneficios/editar/{id}", new()
+        {
+            ["Form.Nome"] = "Vale-transporte", ["Form.CategoriaId"] = cat.ToString(), ["Form.DescricaoCurta"] = desc,
+            ["Form.Icone"] = "bi-bus-front", ["Form.Ordem"] = "2",
+        });
+        var atual = await _b.Escalar<string>($"SELECT COALESCE(DescricaoCurta,'') FROM dbo.Beneficio WHERE Id={id}");
+        if (permitido) Assert.Equal(desc, atual);
+        else { Assert.True(Negado(r)); Assert.NotEqual(desc, atual); }
+    }
+
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Desativar_beneficio_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var nome = "Alvo " + Guid.NewGuid().ToString("N")[..8];
+        var cat = await _b.Escalar<int>("SELECT MIN(Id) FROM dbo.BeneficioCategoria");
+        await BancoTeste.Executar(_b.ConexaoAdmin, $"INSERT dbo.Beneficio (CategoriaId, Nome) VALUES ({cat}, N'{nome}')");
+        var id = await _b.Escalar<int>($"SELECT Id FROM dbo.Beneficio WHERE Nome=N'{nome}'");
+        var c = await LogadoComoAsync(perfil);
+        var r = await PostAsync(c, "/admin/beneficios", $"/admin/beneficios?handler=Alternar&id={id}&ativo=false");
+        var ativo = await _b.Escalar<int>($"SELECT CAST(Ativo AS int) FROM dbo.Beneficio WHERE Id={id}");
+        if (permitido) Assert.Equal(0, ativo);
+        else { Assert.True(Negado(r)); Assert.Equal(1, ativo); }
+    }
+
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Criar_programa_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var nome = "Programa auth " + perfil + " " + Guid.NewGuid().ToString("N")[..6];
+        var c = await LogadoComoAsync(perfil);
+        var r = await PostAsync(c, "/admin/programas", "/admin/programas/editar", new() { ["Form.Nome"] = nome });
+        var existe = await _b.Escalar<int>($"SELECT COUNT(*) FROM dbo.Programa WHERE Nome=N'{nome}'");
+        if (permitido) Assert.Equal(1, existe);
+        else { Assert.True(Negado(r)); Assert.Equal(0, existe); }
+    }
+
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Desativar_programa_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var nome = "Prog alvo " + Guid.NewGuid().ToString("N")[..8];
+        await BancoTeste.Executar(_b.ConexaoAdmin, $"INSERT dbo.Programa (Nome) VALUES (N'{nome}')");
+        var id = await _b.Escalar<int>($"SELECT Id FROM dbo.Programa WHERE Nome=N'{nome}'");
+        var c = await LogadoComoAsync(perfil);
+        var r = await PostAsync(c, "/admin/programas", $"/admin/programas?handler=Alternar&id={id}&ativo=false");
+        var ativo = await _b.Escalar<int>($"SELECT CAST(Ativo AS int) FROM dbo.Programa WHERE Id={id}");
+        if (permitido) Assert.Equal(0, ativo);
+        else { Assert.True(Negado(r)); Assert.Equal(1, ativo); }
+    }
+
     [Fact]
     public async Task Usuario_desativado_perde_a_sessao_aberta_e_nao_volta_a_entrar()
     {

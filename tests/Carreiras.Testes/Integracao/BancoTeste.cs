@@ -67,6 +67,7 @@ public sealed class BancoTeste : IAsyncLifetime
         services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<EmailFalso>());
         services.AddScoped<GestaoUsuarios>();
         services.AddScoped<VagaServico>();
+        services.AddScoped<Carreiras.Infra.Cadastros.CadastroServico>();
         _raiz = services.BuildServiceProvider();
 
         using var s = _raiz.CreateScope();

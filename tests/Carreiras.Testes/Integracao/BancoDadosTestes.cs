@@ -13,8 +13,8 @@ public class BancoDadosTestes
     {
         Assert.Equal(26, await _b.Escalar<int>("SELECT COUNT(*) FROM sys.tables WHERE name NOT LIKE 'AspNet%' AND name NOT LIKE '__EF%'"));
         Assert.Equal(3, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Unidade"));
-        Assert.Equal(13, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Beneficio"));
-        Assert.Equal(3, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Programa"));
+        Assert.Equal(13, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Beneficio WHERE Ficticio = 1"));
+        Assert.Equal(3, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Programa WHERE Ficticio = 1"));
         Assert.Equal(5, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.ConteudoInstitucional"));
         Assert.Equal(6, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Vaga WHERE Status='PUBLICADA' AND Slug IN ('operador-de-producao-timbo','soldador-timbo','mecanico-de-manutencao-industrial-timbo','tecnico-de-metalurgia-laboratorio-timbo','auxiliar-de-expedicao-recife','estagio-engenharia-de-materiais-timbo')"));
         Assert.Equal(1, await _b.Escalar<int>("SELECT COUNT(*) FROM dbo.Vaga WHERE Status='RASCUNHO' AND Slug='analista-comercial-canoas'"));

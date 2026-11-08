@@ -1,0 +1,53 @@
+@page "/admin/beneficios/editar/{id:int?}"
+@model Carreiras.Web.Areas.Admin.Pages.Beneficios.EditarModel
+@{
+    ViewData["Title"] = Model.Form.Id is null ? "Novo benefício" : "Editar benefício";
+    ViewData["Menu"] = "beneficios";
+    var dis = Model.PodeEditar ? null : "disabled";
+}
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+@if (!Model.PodeEditar) { <p class="aviso-ok" role="status">Seu perfil só consulta. Para alterar, peça a um administrador.</p> }
+@if (Model.Erros.Count > 0)
+{
+    <div class="aviso-erro mb-3" role="alert">
+        <strong>Corrija os campos indicados.</strong>
+        <ul class="mb-0">@foreach (var e in Model.Erros) { <li><a href="#Form_@e.Key">@e.Value</a></li> }</ul>
+    </div>
+}
+<form method="post" novalidate class="cartao p-4" style="max-width: 40rem">
+    <fieldset @dis>
+        <div class="mb-3">
+            <label class="form-label" for="Form_Nome">Nome</label>
+            <input class="form-control" id="Form_Nome" name="Form.Nome" value="@Model.Form.Nome" maxlength="80" required aria-invalid="@Model.Invalido("Nome")" aria-describedby="e-Nome" />
+            <div class="erro-campo" id="e-Nome">@Model.Erro("Nome")</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Form_CategoriaId">Categoria</label>
+            <select class="form-select" id="Form_CategoriaId" name="Form.CategoriaId" aria-invalid="@Model.Invalido("CategoriaId")" aria-describedby="e-CategoriaId">
+                <option value="0">Escolha</option>
+                @foreach (var c in Model.Categorias) { <option value="@c.Id" selected="@(Model.Form.CategoriaId == c.Id)">@c.Nome</option> }
+            </select>
+            <div class="erro-campo" id="e-CategoriaId">@Model.Erro("CategoriaId")</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Form_DescricaoCurta">Descrição curta</label>
+            <input class="form-control" id="Form_DescricaoCurta" name="Form.DescricaoCurta" value="@Model.Form.DescricaoCurta" maxlength="160" aria-invalid="@Model.Invalido("DescricaoCurta")" aria-describedby="e-DescricaoCurta" />
+            <div class="erro-campo" id="e-DescricaoCurta">@Model.Erro("DescricaoCurta")</div>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-8">
+                <label class="form-label" for="Form_Icone">Ícone (Bootstrap Icons)</label>
+                <input class="form-control" id="Form_Icone" name="Form.Icone" value="@Model.Form.Icone" maxlength="50" placeholder="bi-credit-card" aria-invalid="@Model.Invalido("Icone")" aria-describedby="e-Icone dica-icone" />
+                <div class="form-text" id="dica-icone">Nome do ícone na biblioteca Bootstrap Icons.</div>
+                <div class="erro-campo" id="e-Icone">@Model.Erro("Icone")</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="Form_Ordem">Ordem</label>
+                <input class="form-control" id="Form_Ordem" name="Form.Ordem" type="number" min="0" max="9999" value="@Model.Form.Ordem" aria-invalid="@Model.Invalido("Ordem")" aria-describedby="e-Ordem" />
+                <div class="erro-campo" id="e-Ordem">@Model.Erro("Ordem")</div>
+            </div>
+        </div>
+    </fieldset>
+    @if (Model.PodeEditar) { <button class="btn btn-primary" type="submit">Salvar</button> }
+    <a class="btn btn-neutro" asp-page="Index">Voltar à lista</a>
+</form>

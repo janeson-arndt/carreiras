@@ -1,0 +1,37 @@
+@page "/admin/programas/editar/{id:int?}"
+@model Carreiras.Web.Areas.Admin.Pages.Programas.EditarModel
+@{
+    ViewData["Title"] = Model.Form.Id is null ? "Novo programa" : "Editar programa";
+    ViewData["Menu"] = "programas";
+    var dis = Model.PodeEditar ? null : "disabled";
+}
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+@if (!Model.PodeEditar) { <p class="aviso-ok" role="status">Seu perfil só consulta. Para alterar, peça a um administrador.</p> }
+@if (Model.Erros.Count > 0)
+{
+    <div class="aviso-erro mb-3" role="alert">
+        <strong>Corrija os campos indicados.</strong>
+        <ul class="mb-0">@foreach (var e in Model.Erros) { <li><a href="#Form_@e.Key">@e.Value</a></li> }</ul>
+    </div>
+}
+<form method="post" novalidate class="cartao p-4" style="max-width: 40rem">
+    <fieldset @dis>
+        <div class="mb-3">
+            <label class="form-label" for="Form_Nome">Nome</label>
+            <input class="form-control" id="Form_Nome" name="Form.Nome" value="@Model.Form.Nome" maxlength="100" required aria-invalid="@Model.Invalido("Nome")" aria-describedby="e-Nome" />
+            <div class="erro-campo" id="e-Nome">@Model.Erro("Nome")</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Form_Descricao">Descrição</label>
+            <textarea class="form-control" id="Form_Descricao" name="Form.Descricao" rows="3" maxlength="600" aria-invalid="@Model.Invalido("Descricao")" aria-describedby="e-Descricao">@Model.Form.Descricao</textarea>
+            <div class="erro-campo" id="e-Descricao">@Model.Erro("Descricao")</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Form_PublicoAlvo">Público-alvo</label>
+            <input class="form-control" id="Form_PublicoAlvo" name="Form.PublicoAlvo" value="@Model.Form.PublicoAlvo" maxlength="200" aria-invalid="@Model.Invalido("PublicoAlvo")" aria-describedby="e-PublicoAlvo" />
+            <div class="erro-campo" id="e-PublicoAlvo">@Model.Erro("PublicoAlvo")</div>
+        </div>
+    </fieldset>
+    @if (Model.PodeEditar) { <button class="btn btn-primary" type="submit">Salvar</button> }
+    <a class="btn btn-neutro" asp-page="Index">Voltar à lista</a>
+</form>
