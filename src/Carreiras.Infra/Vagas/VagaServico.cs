@@ -142,7 +142,7 @@ ORDER BY CASE v.Status WHEN 'PUBLICADA' THEN 0 WHEN 'PAUSADA' THEN 1 WHEN 'RASCU
         }
 
         v.Titulo = f.Titulo.Trim();
-        v.Descricao = f.Descricao.Trim();
+        v.Descricao = f.Descricao.Replace("\r\n", "\n").Trim();   // CRLF do navegador não pode gerar log à toa
         v.UnidadeId = f.UnidadeId; v.AreaId = f.AreaId; v.TurnoId = f.TurnoId;
         v.TipoContratoId = f.TipoContratoId; v.ModalidadeId = f.ModalidadeId; v.ProgramaId = f.ProgramaId;
         v.SalarioMin = f.SalarioMin; v.SalarioMax = f.SalarioMax; v.ExibirSalario = f.ExibirSalario;

@@ -68,6 +68,7 @@ public sealed class BancoTeste : IAsyncLifetime
         services.AddScoped<GestaoUsuarios>();
         services.AddScoped<VagaServico>();
         services.AddScoped<Carreiras.Infra.Cadastros.CadastroServico>();
+        services.AddScoped<Carreiras.Infra.Cadastros.ConteudoServico>();
         services.AddScoped<Carreiras.Infra.Auditoria.AuditoriaConsulta>();
         _raiz = services.BuildServiceProvider();
 

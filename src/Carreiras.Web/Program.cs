@@ -15,6 +15,7 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<GestaoUsuarios>();
 builder.Services.AddScoped<Carreiras.Infra.Vagas.VagaServico>();
 builder.Services.AddScoped<Carreiras.Infra.Cadastros.CadastroServico>();
+builder.Services.AddScoped<Carreiras.Infra.Cadastros.ConteudoServico>();
 builder.Services.AddScoped<Carreiras.Infra.Auditoria.AuditoriaConsulta>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioAuditoria, UsuarioAuditoriaHttp>();

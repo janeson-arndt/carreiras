@@ -1,0 +1,66 @@
+@page "/admin/conteudo"
+@model Carreiras.Web.Areas.Admin.Pages.Conteudo.IndexModel
+@{
+    ViewData["Title"] = "Conteúdo do portal";
+    ViewData["Menu"] = "conteudo";
+    string Resumo(string t) => t.Length <= 140 ? t : t[..140].TrimEnd() + "…";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Conteúdo do portal</h1>
+    @if (Model.PodeEditar)
+    {
+        <a class="btn btn-primary" asp-page="Editar">Novo conteúdo</a>
+    }
+</div>
+<p class="text-secundario">Textos institucionais que aparecem no portal público. Só o que está publicado é exibido.</p>
+@if (!Model.PodeEditar)
+{
+    <p class="text-secundario">Seu perfil só consulta os cadastros. Para alterar, peça a um administrador.</p>
+}
+@if (Model.Itens.Count == 0)
+{
+    <div class="cartao p-4 text-center">Nenhum conteúdo cadastrado.</div>
+}
+else
+{
+<div class="cartao">
+    <div class="table-responsive" style="overflow: visible">
+    <table class="table align-middle mb-0">
+        <caption class="visually-hidden">Conteúdos institucionais</caption>
+        <thead><tr><th scope="col">Conteúdo</th><th scope="col">Seção</th><th scope="col">Ordem</th><th scope="col">Situação</th><th scope="col" class="text-end">Ações</th></tr></thead>
+        <tbody>
+        @foreach (var c in Model.Itens)
+        {
+            <tr>
+                <td><strong>@c.Titulo</strong>@if (c.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@Resumo(c.Texto)</small></td>
+                <td><code>@c.Secao</code></td>
+                <td>@c.Ordem</td>
+                <td><span class="etiqueta @(c.Publicado ? "" : "inativo")">@(c.Publicado ? "Publicado" : "Despublicado")</span></td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@c.Id">@(Model.PodeEditar ? "Editar" : "Ver")</a>
+                    @if (Model.PodeEditar)
+                    {
+                        <div class="acoes">
+                            <button type="button" class="btn btn-sm btn-neutro" data-acoes aria-expanded="false" aria-controls="acoes-@c.Id">Ações</button>
+                            <div class="acoes-lista text-start" id="acoes-@c.Id" hidden>
+                                @if (c.Publicado)
+                                {
+                                    <form method="post" asp-page-handler="Publicar" asp-route-id="@c.Id" asp-route-publicado="false">
+                                        <button type="submit" class="perigo" data-confirmar="Despublicar @c.Titulo? Ele sai do portal público.">Despublicar</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="Publicar" asp-route-id="@c.Id" asp-route-publicado="true"><button type="submit">Publicar</button></form>
+                                }
+                            </div>
+                        </div>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+    </div>
+</div>
+}

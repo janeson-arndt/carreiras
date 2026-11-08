@@ -126,7 +126,7 @@ public sealed class CadastroServico
         var p = f.Id is null ? _db.Programas.Add(new Programa { Ativo = true }).Entity
             : await _db.Programas.SingleOrDefaultAsync(x => x.Id == f.Id, ct) ?? throw new InvalidOperationException("Programa não encontrado.");
         p.Nome = nome;
-        p.Descricao = Vazio(f.Descricao);
+        p.Descricao = Vazio(f.Descricao?.Replace("\r\n", "\n"));
         p.PublicoAlvo = Vazio(f.PublicoAlvo);
         await _db.SaveChangesAsync(ct);
         return (Resultado.Sucesso(), p.Id, erros);

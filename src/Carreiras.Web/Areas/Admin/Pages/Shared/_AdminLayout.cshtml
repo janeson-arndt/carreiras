@@ -45,6 +45,7 @@
         <div class="grupo">Cadastros</div>
         <a asp-area="Admin" asp-page="/Beneficios/Index" aria-current="@Atual("beneficios")">Benefícios</a>
         <a asp-area="Admin" asp-page="/Programas/Index" aria-current="@Atual("programas")">Programas</a>
+        <a asp-area="Admin" asp-page="/Conteudo/Index" aria-current="@Atual("conteudo")">Conteúdo</a>
         @if (User.IsInRole(Perfis.Administrador))
         {
             <div class="grupo">Administração</div>

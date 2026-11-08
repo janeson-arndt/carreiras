@@ -282,6 +282,49 @@ FROM dbo.Unidade u, dbo.Area a, dbo.Turno t, dbo.TipoContrato c, dbo.Modalidade 
         Assert.Contains("data final não pode ser anterior", html);
     }
 
+    [Theory]
+    [InlineData(Perfis.Administrador)]
+    [InlineData(Perfis.Analista)]
+    [InlineData(Perfis.Leitura)]
+    public async Task Todos_os_perfis_consultam_o_conteudo(string perfil)
+    {
+        var id = await _b.Escalar<int>("SELECT Id FROM dbo.ConteudoInstitucional WHERE Secao='sobre'");
+        var c = await LogadoComoAsync(perfil);
+        Assert.Equal(HttpStatusCode.OK, (await c.GetAsync("/admin/conteudo")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await c.GetAsync($"/admin/conteudo/editar/{id}")).StatusCode);
+    }
+
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Criar_conteudo_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var secao = "auth-" + perfil.ToLower() + "-" + Guid.NewGuid().ToString("N")[..6];
+        var c = await LogadoComoAsync(perfil);
+        var r = await PostAsync(c, "/admin/conteudo", "/admin/conteudo/editar", new()
+        { ["Form.Secao"] = secao, ["Form.Titulo"] = "Título", ["Form.Texto"] = "Texto", ["Form.Ordem"] = "1", ["Form.Publicado"] = "true" });
+        var existe = await _b.Escalar<int>($"SELECT COUNT(*) FROM dbo.ConteudoInstitucional WHERE Secao=N'{secao}'");
+        if (permitido) Assert.Equal(1, existe);
+        else { Assert.True(Negado(r)); Assert.Equal(0, existe); }
+    }
+
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Despublicar_conteudo_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var secao = "alvo-" + Guid.NewGuid().ToString("N")[..8];
+        await BancoTeste.Executar(_b.ConexaoAdmin, $"INSERT dbo.ConteudoInstitucional (Secao, Titulo, Texto) VALUES (N'{secao}', N't', N'x')");
+        var id = await _b.Escalar<int>($"SELECT Id FROM dbo.ConteudoInstitucional WHERE Secao=N'{secao}'");
+        var c = await LogadoComoAsync(perfil);
+        var r = await PostAsync(c, "/admin/conteudo", $"/admin/conteudo?handler=Publicar&id={id}&publicado=false");
+        var publicado = await _b.Escalar<int>($"SELECT CAST(Publicado AS int) FROM dbo.ConteudoInstitucional WHERE Id={id}");
+        if (permitido) Assert.Equal(0, publicado);
+        else { Assert.True(Negado(r)); Assert.Equal(1, publicado); }
+    }
+
     [Fact]
     public async Task Usuario_desativado_perde_a_sessao_aberta_e_nao_volta_a_entrar()
     {
