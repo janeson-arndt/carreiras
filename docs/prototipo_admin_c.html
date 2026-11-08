@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal do RH | Protótipo C (Entrega 02)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --verde-esc:#006729; --verde:#118F40; --verde-hover:#004D1F; --cinza:#717171; --cinza-txt:#5C5C5C;
+  --texto:#232323; --fundo:#F3F4F3; --branco:#fff; --tint:#E4F1E8; --linha:#D5D9D6; --erro:#B3261E; --erro-bg:#FBE9E7;
+  --titulo:'Exo 2','Arial Narrow',Arial,sans-serif; --corpo:'Source Sans 3',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+input[type=checkbox],input[type=radio]{accent-color:var(--verde-esc)}
+body{margin:0;font:400 16px/1.5 var(--corpo);color:var(--texto);background:var(--fundo)}
+h1,h2,h3{font-family:var(--titulo);font-weight:700;line-height:1.1;margin:0}
+h1{font-size:30px;color:var(--verde-esc)}
+h2{font-size:22px;color:var(--verde-esc)}
+h3{font-size:18px}
+a{color:var(--verde-esc)}
+:focus-visible{outline:3px solid var(--verde-esc);outline-offset:2px}
+[hidden]{display:none!important}
+.skip{position:absolute;left:-999px;top:8px;background:var(--branco);padding:8px 12px;z-index:60}
+.skip:focus{left:8px}
+.aviso{background:var(--tint);border-bottom:1px solid var(--linha);font-size:14px;padding:6px 20px}
+
+/* login */
+.login{min-height:calc(100vh - 34px);display:grid;place-items:center;padding:24px}
+.login .caixa{background:var(--branco);border:1px solid var(--linha);border-top:6px solid var(--verde);border-radius:10px;padding:28px;width:100%;max-width:460px}
+.login h1{margin-bottom:4px}
+.login .sub{color:var(--cinza-txt);margin:0 0 18px}
+.perfis{border:1px solid var(--linha);border-radius:8px;padding:10px 14px;margin:16px 0 0}
+.perfis legend{font-weight:600;padding:0 6px}
+.perfis label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-weight:400;font-size:15px}
+.perfis input{margin-top:5px;width:18px;height:18px;flex:none}
+.perfis b{display:block}
+
+/* app */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 34px)}
+.menu{background:var(--verde-esc);color:var(--branco);padding:18px 0;display:flex;flex-direction:column}
+.menu .marca{padding:0 20px 14px;border-bottom:1px solid #2b8a52;margin-bottom:10px}
+.menu .marca strong{font:800 18px/1.1 var(--titulo);display:block}
+.menu .marca span{font-size:14px;color:#d4ead9}
+.menu nav a{display:block;color:var(--branco);text-decoration:none;padding:10px 20px;border-left:4px solid transparent;font-weight:600}
+.menu nav a:hover{background:var(--verde-hover)}
+.menu nav a[aria-current="page"]{background:var(--verde-hover);border-left-color:var(--branco)}
+.menu .usuario{margin-top:auto;padding:14px 20px 0;border-top:1px solid #2b8a52;font-size:14px}
+.menu .usuario .btn{margin-top:8px;width:100%}
+.conteudo{padding:26px 30px 60px;min-width:0}
+.topo-pagina{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.topo-pagina p{margin:4px 0 0;color:var(--cinza-txt)}
+
+.btn{font:600 15px var(--corpo);padding:9px 16px;border-radius:6px;border:2px solid var(--verde-esc);background:var(--verde-esc);color:var(--branco);cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn:hover{background:var(--verde-hover);border-color:var(--verde-hover)}
+.btn.sec{background:var(--branco);color:var(--verde-esc)}
+.btn.sec:hover{background:var(--tint)}
+.btn.peq{padding:4px 10px;font-size:14px}
+.btn.perigo{background:var(--branco);color:var(--erro);border-color:var(--erro)}
+.btn.perigo:hover{background:var(--erro-bg)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.somente{background:var(--fundo);border:1px solid var(--linha);border-radius:6px;padding:8px 12px;font-size:14px;margin-bottom:14px}
+
+label{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
+input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--cinza);border-radius:6px;background:var(--branco);color:var(--texto)}
+textarea{min-height:110px;resize:vertical}
+input[aria-invalid=true],select[aria-invalid=true],textarea[aria-invalid=true]{border-color:var(--erro);border-width:2px}
+.erro{color:var(--erro);font-size:14px;margin-top:3px}
+.ajuda{color:var(--cinza-txt);font-size:14px;margin-top:3px}
+.campo{margin-bottom:14px}
+
+.filtros{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.filtros>div{min-width:170px}
+.filtros .busca{flex:1;min-width:220px}
+.cartao{background:var(--branco);border:1px solid var(--linha);border-radius:8px}
+.rolagem{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--linha);vertical-align:middle}
+th{background:var(--fundo);font-weight:600;font-size:14px;white-space:nowrap}
+td .acoes{display:flex;gap:6px;flex-wrap:wrap}
+.contagem{margin:0 0 8px;font-weight:600}
+.vazio{padding:26px;text-align:center}
+.vazio p{margin:0 0 12px}
+
+.selo{display:inline-block;border:1px solid;border-radius:4px;padding:1px 8px;font-size:13px;font-weight:600;white-space:nowrap}
+.s-RASCUNHO{background:#EDEDED;color:#3D3D3D;border-color:#9A9A9A}
+.s-PUBLICADA{background:var(--tint);color:var(--verde-hover);border-color:var(--verde)}
+.s-PAUSADA{background:#FFF4D6;color:#5C4400;border-color:#C99A00}
+.s-ENCERRADA{background:#5C5C5C;color:#fff;border-color:#5C5C5C}
+.ex{display:inline-block;background:var(--tint);border:1px solid var(--verde);border-radius:4px;padding:0 6px;font-size:12px;margin-left:6px}
+.perfil-selo{display:inline-block;background:var(--branco);color:var(--verde-hover);border-radius:4px;padding:0 8px;font-size:13px;font-weight:600}
+
+/* editor */
+.editor{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:start}
+.bloco{padding:18px;margin-bottom:16px}
+.bloco h2{margin-bottom:12px}
+.grade2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grade3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.linha-lista{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.linha-lista input[type=text]{flex:1}
+.linha-lista label{display:flex;gap:6px;align-items:center;margin:0;font-weight:400;white-space:nowrap}
+.cat-ben{margin-bottom:12px}
+.cat-ben legend{font-weight:600;font-size:14px;color:var(--verde-esc);margin-bottom:4px}
+.check{display:flex;gap:8px;align-items:center;font-weight:400;margin-bottom:4px;font-size:15px}
+.check input{width:18px;height:18px}
+.resumo-erros{background:var(--erro-bg);border:2px solid var(--erro);border-radius:8px;padding:12px 16px;margin-bottom:16px}
+.resumo-erros ul{margin:6px 0 0;padding-left:20px}
+.lateral{position:sticky;top:16px}
+.lateral dl{margin:0 0 12px}
+.lateral dt{font-size:13px;color:var(--cinza-txt)}
+.lateral dd{margin:0 0 8px;font-weight:600;word-break:break-all}
+.lateral dd.ajuda{word-break:normal}
+.lateral .acoes-col{display:grid;gap:8px}
+.hist{margin:0;padding-left:18px;font-size:14px}
+
+/* diálogo e aviso */
+dialog{border:0;border-radius:10px;padding:0;max-width:560px;width:calc(100% - 24px);color:var(--texto)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+.dlg{padding:22px}
+.dlg h2{margin-bottom:10px}
+.dlg .rodape-dlg{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--texto);color:#fff;padding:12px 18px;border-radius:8px;z-index:80;max-width:340px}
+.toast[hidden]{display:none}
+.interruptor{display:flex;gap:8px;align-items:center}
+.interruptor input{width:20px;height:20px}
+.det dt{font-size:13px;color:var(--cinza-txt)}
+.det dd{margin:0 0 10px;font-weight:600}
+.valor{max-width:260px;word-break:break-word}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .menu{flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px 0}
+  .menu .marca{border:0;margin:0;padding:0 16px}
+  .menu nav{display:flex;flex-wrap:wrap}
+  .menu nav a{padding:8px 12px;border-left:0;border-bottom:3px solid transparent}
+  .menu nav a[aria-current="page"]{border-bottom-color:var(--branco)}
+  .menu .usuario{margin:0 0 0 auto;border:0;padding:0 16px;display:flex;gap:10px;align-items:center}
+  .menu .usuario .btn{margin:0;width:auto}
+  .editor{grid-template-columns:1fr}
+  .lateral{position:static}
+  .grade2,.grade3{grid-template-columns:1fr}
+  .conteudo{padding:18px 16px 50px}
+}
+
+/* ===== alternativa B: verde só em ação, marcação e selos ===== */
+h1,h2{color:var(--texto)}
+.menu{background:var(--branco);color:var(--texto);border-right:1px solid var(--linha)}
+.menu .marca{border-bottom:1px solid var(--linha)}
+.menu .marca strong{color:var(--texto)}
+.menu .marca span{color:var(--cinza-txt)}
+.menu nav a{color:var(--texto)}
+.menu nav a:hover{background:var(--fundo)}
+.menu nav a[aria-current="page"]{background:var(--tint);color:var(--verde-hover);border-left-color:var(--verde-esc)}
+.menu .usuario{border-top:1px solid var(--linha);color:var(--texto)}
+.perfil-selo{background:var(--tint);color:var(--verde-hover);border:1px solid var(--verde)}
+.login .caixa{border-top-color:var(--verde-esc)}
+.btn.sec{color:var(--texto);border-color:var(--cinza)}
+.btn.sec:hover{background:var(--fundo);border-color:var(--texto)}
+.cartao td>a{color:var(--texto)}
+.cartao td>a:hover{color:var(--verde-esc)}
+@media (max-width:900px){
+  .menu{border-right:0;border-bottom:1px solid var(--linha)}
+  .menu .marca{border:0}
+  .menu nav a{border-left:0;border-bottom:3px solid transparent}
+  .menu nav a[aria-current="page"]{background:var(--tint);border-bottom-color:var(--verde-esc)}
+  .menu .usuario{border:0}
+}
+
+/* ===== alternativa C: marca em verde, conta no topo, ações agrupadas ===== */
+.menu .marca strong{color:var(--verde-esc)}
+.coluna{min-width:0;display:flex;flex-direction:column}
+.barra-topo{display:flex;justify-content:flex-end;align-items:center;padding:8px 30px;background:var(--branco);border-bottom:1px solid var(--linha);position:sticky;top:0;z-index:30}
+.conta-btn{display:flex;align-items:center;gap:10px;background:none;border:1px solid transparent;border-radius:8px;padding:4px 8px 4px 4px;cursor:pointer;color:var(--texto);text-align:left;font:inherit}
+.conta-btn:hover{background:var(--fundo);border-color:var(--linha)}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--tint);color:var(--verde-hover);border:1px solid var(--verde);display:grid;place-items:center;font:700 14px/1 var(--titulo);flex:none}
+.conta-txt{display:flex;flex-direction:column;line-height:1.2}
+.conta-txt span{font-weight:600;font-size:15px}
+.conta-txt small{color:var(--cinza-txt);font-size:13px}
+.btn svg,.conta-btn svg{margin-left:6px;vertical-align:middle;flex:none}
+.popover{position:fixed;z-index:70;background:var(--branco);border:1px solid var(--linha);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.14);min-width:190px;padding:6px}
+.popover ul{list-style:none;margin:0;padding:0}
+.popover .item{display:block;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:8px 12px;font:inherit;cursor:pointer;color:var(--texto)}
+.popover .item:hover,.popover .item:focus-visible{background:var(--fundo)}
+.popover .item.perigo{color:var(--erro)}
+.popover .item.perigo:hover,.popover .item.perigo:focus-visible{background:var(--erro-bg)}
+.popover .sep{height:1px;background:var(--linha);margin:6px 0;list-style:none}
+.popover-info{margin:0;padding:6px 12px;font-size:14px;color:var(--cinza-txt);word-break:break-all}
+.popover-info strong{display:block;color:var(--texto);font-size:15px}
+.acoes-linha{display:flex;gap:6px;align-items:center}
+.acoes-linha .btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.acoes-linha .btn svg{margin-left:6px}
+@media (max-width:900px){
+  .barra-topo{padding:6px 16px}
+}
+@media (max-width:520px){
+  .conta-txt{display:none}
+}
+.item[aria-disabled=true]{opacity:.55;cursor:not-allowed}
+.item[aria-disabled=true]:hover{background:none}
+.item-info{margin:0;padding:0 12px 6px;font-size:13px;color:var(--cinza-txt);max-width:250px}
+.popover li{list-style:none}
+.item .ex{margin-left:4px}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Ir para o conteúdo</a>
+<div class="aviso"><strong>Protótipo de estudo do portal do RH, alternativa C (menu claro, ações agrupadas, conta no topo e gestão de usuários).</strong> Os dados são de exemplo e as alterações valem só enquanto esta página estiver aberta.</div>
+
+<div id="tela-login" class="login">
+  <div class="caixa">
+    <h1>Portal do RH</h1>
+    <p class="sub">Metalúrgica Timboense, Carreiras</p>
+    <form id="form-login" novalidate>
+      <div class="campo"><label for="l-email">E-mail</label><input id="l-email" type="email" autocomplete="username" value="rh@exemplo.com"><div class="erro" id="e-l-email"></div></div>
+      <div class="campo"><label for="l-senha">Senha</label><input id="l-senha" type="password" autocomplete="current-password" value="demonstracao"><div class="erro" id="e-l-senha"></div></div>
+      <fieldset class="perfis">
+        <legend>Perfil de demonstração</legend>
+        <label><input type="radio" name="perfil" value="ADMINISTRADOR" checked><span><b>Administrador</b>Faz tudo: vagas, candidaturas, cadastros e auditoria.</span></label>
+        <label><input type="radio" name="perfil" value="ANALISTA"><span><b>Analista</b>Gerencia vagas e candidaturas; só consulta os cadastros.</span></label>
+        <label><input type="radio" name="perfil" value="LEITURA"><span><b>Leitura</b>Só consulta. Não altera nada.</span></label>
+      </fieldset>
+      <p class="ajuda">A escolha de perfil existe só no protótipo. No sistema, o perfil vem do cadastro do usuário.</p>
+      <div class="erro" id="e-l-geral" role="alert"></div>
+      <button class="btn" type="submit" style="width:100%;margin-top:10px">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<div id="tela-app" class="app" hidden>
+  <aside class="menu">
+    <div class="marca"><strong>Metalúrgica Timboense</strong><span>Portal do RH</span></div>
+    <nav aria-label="Principal" id="menu-nav"></nav>
+  </aside>
+  <div class="coluna">
+    <div class="barra-topo">
+      <button class="conta-btn" type="button" id="conta-btn" data-acao="pop" data-alvo="conta-menu" aria-expanded="false" aria-controls="conta-menu">
+        <span class="avatar" id="u-ini" aria-hidden="true"></span>
+        <span class="conta-txt"><span id="u-nome"></span><small id="u-perfil"></small></span>
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="popover" id="conta-menu" hidden>
+        <p class="popover-info"><strong>Conta</strong><span id="u-email"></span></p>
+        <div class="sep" role="separator"></div>
+        <button class="item" type="button" data-acao="sair">Sair</button>
+      </div>
+    </div>
+    <main class="conteudo" id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<dialog id="dlg"><div class="dlg" id="dlg-corpo"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+/* ====== dados de exemplo (mesmo seed do banco) ====== */
+const UNIDADES = ['Matriz Timbó', 'Filial Recife', 'Escritório Rio Grande do Sul'];
+const CIDADE = { 'Matriz Timbó':'Timbó (SC)', 'Filial Recife':'Recife (PE)', 'Escritório Rio Grande do Sul':'Canoas (RS)' };
+const CHAVE = { 'Matriz Timbó':'timbo', 'Filial Recife':'recife', 'Escritório Rio Grande do Sul':'canoas' };
+const AREAS = ['Produção','Manutenção','Qualidade e Laboratório','Logística','Engenharia','Comercial','Segurança do Trabalho','Administrativo'];
+const TURNOS = ['Comercial (dia)','1º turno','2º turno','3º turno','Escala 12x36'];
+const CONTRATOS = ['CLT','Estágio','Jovem Aprendiz','Temporário'];
+const MODALIDADES = ['Presencial','Híbrido','Remoto'];
+const ICONES = ['bi-credit-card','bi-bus-front','bi-graph-up-arrow','bi-percent','bi-mortarboard','bi-journal-text','bi-people','bi-hospital','bi-umbrella','bi-shield-check','bi-cup-hot','bi-person-workspace','bi-truck'];
+const ROT_STATUS = { RASCUNHO:'Rascunho', PUBLICADA:'Publicada', PAUSADA:'Pausada', ENCERRADA:'Encerrada' };
+const ROT_CAND = { RECEBIDA:'Recebida', EM_ANALISE:'Em análise', ENTREVISTA:'Entrevista', APROVADA:'Aprovada', REPROVADA:'Reprovada' };
+const TRANS = { RASCUNHO:[['PUBLICADA','Publicar']], PUBLICADA:[['PAUSADA','Pausar'],['ENCERRADA','Encerrar']], PAUSADA:[['PUBLICADA','Reativar'],['ENCERRADA','Encerrar']], ENCERRADA:[] };
+const MSG_TRANS = { PUBLICADA:'Vaga publicada.', PAUSADA:'Vaga pausada.', ENCERRADA:'Vaga encerrada.' };
+const PACK_CLT = ['Vale-alimentação ou refeição','Vale-transporte','Participação nos resultados (PPR)','Plano de saúde','Seguro de vida','Refeitório no local','Uniforme e EPI fornecidos','Cursos e treinamentos técnicos'];
+const PACK_EST = ['Vale-transporte','Refeitório no local','Cursos e treinamentos técnicos'];
+const dia = (d) => new Date(2026, 10, 8 - d, 9, 30).toISOString();
+
+const state = {
+  user: null, perfil: null, seq: { vaga: 8, ben: 14, prog: 4, hist: 100, log: 1, usr: 6 },
+  fv: { q:'', status:'', unidade:'' }, fu: { q:'', sit:'' }, fc: { vaga:'', status:'' }, fl: { tabela:'' },
+  categorias: ['Financeiro','Educação','Saúde e bem-estar','Dia a dia'],
+  beneficios: [
+    [1,'Financeiro','Vale-alimentação ou refeição','Escolha o formato que cabe melhor na sua rotina.','bi-credit-card',1],
+    [2,'Financeiro','Vale-transporte','Ajuda no trajeto de casa até a fábrica.','bi-bus-front',2],
+    [3,'Financeiro','Participação nos resultados (PPR)','Quando a empresa bate as metas, o time divide o resultado.','bi-graph-up-arrow',3],
+    [4,'Financeiro','Descontos em produtos','Condições especiais na compra de produtos da empresa.','bi-percent',4],
+    [5,'Educação','Auxílio educação','Apoio financeiro para graduação e cursos técnicos.','bi-mortarboard',1],
+    [6,'Educação','Cursos e treinamentos técnicos','Capacitação contínua dentro da jornada de trabalho.','bi-journal-text',2],
+    [7,'Educação','Formação de liderança','Trilha de desenvolvimento para quem quer liderar equipes.','bi-people',3],
+    [8,'Saúde e bem-estar','Plano de saúde','Cobertura médica para você.','bi-hospital',1],
+    [9,'Saúde e bem-estar','Seguro de vida','Proteção para você e sua família.','bi-umbrella',2],
+    [10,'Saúde e bem-estar','Segurança em primeiro lugar','Programa contínuo de prevenção de acidentes.','bi-shield-check',3],
+    [11,'Dia a dia','Refeitório no local','Refeições balanceadas durante o expediente.','bi-cup-hot',1],
+    [12,'Dia a dia','Uniforme e EPI fornecidos','Equipamentos de proteção e uniforme sem custo.','bi-person-workspace',2],
+    [13,'Dia a dia','Transporte fretado','Rotas fretadas para os principais bairros.','bi-truck',3]
+  ].map(b => ({ id:b[0], categoria:b[1], nome:b[2], desc:b[3], icone:b[4], ordem:b[5], ativo:true, ficticio:true })),
+  programas: [
+    { id:1, nome:'Programa de Estágio', desc:'Estágio com acompanhamento de um tutor e rodízio entre áreas da fábrica.', publico:'Estudantes de engenharia e cursos técnicos', ativo:true, ficticio:true },
+    { id:2, nome:'Jovem Aprendiz', desc:'Primeira experiência profissional com formação técnica na área industrial.', publico:'Jovens de 14 a 24 anos', ativo:true, ficticio:true },
+    { id:3, nome:'Trainee Industrial', desc:'Trilha de desenvolvimento para recém-formados em posições de liderança industrial.', publico:'Recém-graduados em engenharia', ativo:true, ficticio:true }
+  ],
+  conteudo: [
+    { id:1, secao:'sobre', titulo:'Quem somos', texto:'Empresa brasileira de capital aberto, com mais de 80 anos de história, cerca de 1.200 colaboradores e sede em Timbó (SC). Produz ferramentas e peças em aço para diversos segmentos e exporta para mais de 60 países.', publicado:true, ficticio:false },
+    { id:2, secao:'qualidade', titulo:'Qualidade', texto:'Compromisso com a melhoria contínua da satisfação de clientes, fornecedores, colaboradores e acionistas, e com a preservação do meio ambiente.', publicado:true, ficticio:false },
+    { id:3, secao:'meio-ambiente', titulo:'Meio ambiente', texto:'Monitoramento contínuo de águas, solo e emissões, gestão de resíduos sólidos e área verde de preservação no entorno da sede.', publicado:true, ficticio:false },
+    { id:4, secao:'diversidade', titulo:'Diversidade e inclusão', texto:'Oportunidades iguais para todas as pessoas, com vagas afirmativas identificadas e processos seletivos acessíveis.', publicado:true, ficticio:true },
+    { id:5, secao:'privacidade', titulo:'Privacidade e LGPD', texto:'Seus dados pessoais são tratados conforme a Lei 13.709/2018, apenas para o processo seletivo. Para exercer seus direitos, fale com o encarregado de dados: dpo@exemplo.local.', publicado:true, ficticio:true }
+  ],
+  vagas: [], cands: [], histVaga: [], histCand: [], log: [], usuarios: []
+};
+(function seed(){
+  const V = (id, slug, titulo, unidade, area, turno, contrato, modalidade, programa, status, descricao, atv, req, dif, pack, sal) => ({
+    id, slug, titulo, unidade, area, turno, contrato, modalidade, programa, status, descricao,
+    atividades: atv, requisitos: req.map(r => ({ t:r[0], obrig:!!r[1] })), diferenciais: dif, beneficios: pack.slice(),
+    salMin: sal ? sal[0] : '', salMax: sal ? sal[1] : '', exibirSalario: !!sal,
+    publicadaEm: status === 'RASCUNHO' ? null : dia(2), atualizadaEm: dia(2) });
+  state.vagas = [
+    V(1,'operador-de-producao-timbo','Operador(a) de Produção','Matriz Timbó','Produção','1º turno','CLT','Presencial','','PUBLICADA','Atuação na linha de conformação e tratamento térmico de ferramentas em aço.',['Operar equipamentos da linha conforme a ordem de produção','Registrar apontamentos e inspecionar peças'],[['Ensino médio completo',1],['Experiência em indústria metalúrgica',0]],['Possibilidade de crescimento para líder de turno'],PACK_CLT),
+    V(2,'soldador-timbo','Soldador(a)','Matriz Timbó','Produção','2º turno','CLT','Presencial','','PUBLICADA','Soldagem de componentes e conjuntos conforme procedimentos de qualidade.',['Executar soldas seguindo desenho e procedimento'],[['Experiência comprovada em soldagem MIG/MAG',1],['Curso de soldagem',0]],['Certificação em soldagem'],PACK_CLT),
+    V(3,'mecanico-de-manutencao-industrial-timbo','Mecânico(a) de Manutenção Industrial','Matriz Timbó','Manutenção','3º turno','CLT','Presencial','','PUBLICADA','Manutenção preventiva e corretiva de prensas, fornos e linhas de produção.',['Diagnosticar falhas e executar reparos em máquinas'],[['Curso técnico em mecânica ou manutenção industrial',1],['Conhecimento de NR-10 e NR-12',0]],['Experiência com prensas e fornos industriais'],PACK_CLT),
+    V(4,'tecnico-de-metalurgia-laboratorio-timbo','Técnico(a) de Metalurgia - Laboratório','Matriz Timbó','Qualidade e Laboratório','Comercial (dia)','CLT','Presencial','','PUBLICADA','Ensaios físicos e químicos de aços e acompanhamento das propriedades mecânicas.',['Realizar ensaios de dureza, tração e análise química'],[['Curso técnico em metalurgia ou química',1]],['Conhecimento de aços microligados'],PACK_CLT,[3800,4600]),
+    V(5,'auxiliar-de-expedicao-recife','Auxiliar de Expedição','Filial Recife','Logística','Escala 12x36','CLT','Presencial','','PUBLICADA','Separação, conferência e expedição de produtos no centro de distribuição.',['Conferir e separar pedidos para despacho'],[['Ensino médio completo',1],['Operação de empilhadeira',0]],[],PACK_CLT),
+    V(6,'estagio-engenharia-de-materiais-timbo','Estágio em Engenharia de Materiais','Matriz Timbó','Engenharia','Comercial (dia)','Estágio','Presencial','Programa de Estágio','PUBLICADA','Apoio a projetos de melhoria de processo e análise de materiais.',['Acompanhar ensaios e levantar dados para projetos de melhoria'],[['Cursando engenharia de materiais ou metalúrgica',1]],['Inglês técnico'],PACK_EST),
+    V(7,'analista-comercial-canoas','Analista Comercial','Escritório Rio Grande do Sul','Comercial','Comercial (dia)','CLT','Híbrido','','RASCUNHO','Atendimento a clientes e representantes da região Sul.',['Atender clientes e representantes da região Sul'],[['Experiência em vendas técnicas B2B',1]],[],PACK_CLT)
+  ];
+  const U = (id, nome, email, perfil, ativo, aceito, acesso) => ({ id, nome, email, perfil, ativo, conviteAceito: aceito, criadoEm: dia(120), ultimoAcesso: acesso });
+  state.usuarios = [
+    U(1, 'Marina Souza (exemplo)', 'marina@exemplo.com', 'ADMINISTRADOR', true, true, dia(1)),
+    U(2, 'Paulo Reis (exemplo)', 'paulo@exemplo.com', 'ANALISTA', true, true, dia(2)),
+    U(3, 'Lúcia Prado (exemplo)', 'lucia@exemplo.com', 'LEITURA', true, true, dia(5)),
+    U(4, 'Carlos Menezes (exemplo)', 'carlos.menezes@exemplo.com', 'ANALISTA', false, true, dia(40)),
+    U(5, 'Renata Alves (exemplo)', 'renata@exemplo.com', 'ANALISTA', true, false, null)
+  ];
+  state.vagas.forEach(v => state.histVaga.push({ id: state.seq.hist++, vagaId: v.id, status: v.status, em: dia(2), por: 'Sistema (seed)' }));
+  const C = (id, nome, email, tel, cid, uf, vagaId, pret, status, d, anon) => ({ id, nome, email, tel, cidade: cid, uf, vagaId, pret, status, criadaEm: dia(d), anonimizado: !!anon, hist: [] });
+  state.cands = [
+    C(1,'Carlos Henrique Dias','carlos@exemplo.com','(47) 99111-0001','Timbó','SC',2,3200,'RECEBIDA',6),
+    C(2,'Fernanda Lima','fernanda@exemplo.com','(47) 99111-0002','Indaial','SC',1,'','EM_ANALISE',4),
+    C(3,'João Pedro Alves','joao@exemplo.com','(47) 99111-0003','Blumenau','SC',3,4100,'ENTREVISTA',3),
+    C(4,'Aline Costa','aline@exemplo.com','(47) 99111-0004','Timbó','SC',4,4300,'APROVADA',2),
+    C(5,'Rafael Souza','rafael@exemplo.com','(81) 99111-0005','Recife','PE',5,2100,'REPROVADA',3),
+    C(6,'Beatriz Nunes','beatriz@exemplo.com','(47) 99111-0006','Timbó','SC',6,1800,'RECEBIDA',1),
+    C(7,'Marcos Teixeira','marcos@exemplo.com','(51) 99111-0007','Canoas','RS',null,3000,'RECEBIDA',2),
+    C(8,'Anonimizado','anonimizado-8@invalid.local','','','',2,'','REPROVADA',20,true)
+  ];
+  const ORDEM = ['RECEBIDA','EM_ANALISE','ENTREVISTA','APROVADA'];
+  state.cands.forEach(c => {
+    c.hist.push({ status:'RECEBIDA', em:c.criadaEm, por:'Candidatura enviada' });
+    if (c.status === 'REPROVADA') c.hist.push({ status:'REPROVADA', em:dia(7), por:'Marina Souza (exemplo)' });
+    else for (let i = 1; i <= ORDEM.indexOf(c.status); i++) c.hist.push({ status:ORDEM[i], em:dia(5), por:'Marina Souza (exemplo)' });
+  });
+})();
+
+/* ====== utilitários ====== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const agora = () => new Date().toISOString();
+const fmt = iso => { if (!iso) return '-'; const d = new Date(iso); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }); };
+const fmtDia = iso => iso ? new Date(iso).toLocaleDateString('pt-BR') : '-';
+const reais = n => n === '' || n == null ? '-' : 'R$ ' + Number(n).toLocaleString('pt-BR');
+const PERMISSOES = { 'vagas.editar':['ADMINISTRADOR','ANALISTA'], 'cands.editar':['ADMINISTRADOR','ANALISTA'], 'cadastros.editar':['ADMINISTRADOR'], 'auditoria.ver':['ADMINISTRADOR'], 'usuarios.gerenciar':['ADMINISTRADOR'] };
+const pode = p => !!state.perfil && PERMISSOES[p].includes(state.perfil);
+const nomeUsuario = () => state.user ? state.user.nome : 'Sistema';
+const selo = s => `<span class="selo s-${s}">${ROT_STATUS[s]}</span>`;
+const opcoes = (lista, sel, vazio) => (vazio ? `<option value="">${vazio}</option>` : '') + lista.map(o => `<option${o === sel ? ' selected' : ''}>${esc(o)}</option>`).join('');
+let toastTimer;
+function aviso(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 4000); }
+
+/* auditoria centralizada (RN12): todo registro de alteração passa por aqui */
+function logar(tabela, registroId, campo, antigo, novo){
+  const a = antigo == null ? '' : String(antigo), n = novo == null ? '' : String(novo);
+  if (a === n) return;
+  state.log.unshift({ id: state.seq.log++, em: agora(), por: nomeUsuario(), tabela, registroId, campo, antigo: a, novo: n });
+}
+
+/* ====== diálogo ====== */
+const dlg = $('#dlg');
+function abrirDlg(html){ $('#dlg-corpo').innerHTML = html; if (!dlg.open) dlg.showModal(); }
+function fecharDlg(){ dlg.close(); }
+function confirmar(titulo, msg, rotulo){
+  return new Promise(res => {
+    abrirDlg(`<h2>${esc(titulo)}</h2><p>${esc(msg)}</p><div class="rodape-dlg"><button class="btn sec" type="button" data-cancelar>Cancelar</button><button class="btn" type="button" data-ok>${esc(rotulo)}</button></div>`);
+    $('[data-ok]', dlg).onclick = () => { fecharDlg(); res(true); };
+    $('[data-cancelar]', dlg).onclick = () => { fecharDlg(); res(false); };
+  });
+}
+
+/* ====== login ====== */
+$('#form-login').addEventListener('submit', e => {
+  e.preventDefault();
+  const em = $('#l-email').value.trim(), se = $('#l-senha').value;
+  $('#e-l-email').textContent = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em) ? '' : 'Informe um e-mail válido, como nome@exemplo.com.';
+  $('#e-l-senha').textContent = se ? '' : 'Informe a senha.';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em) || !se) return;
+  const perfilSel = $('input[name=perfil]:checked').value;
+  const pessoa = state.usuarios.find(u => u.id === { ADMINISTRADOR:1, ANALISTA:2, LEITURA:3 }[perfilSel]);
+  if (!pessoa.ativo){ $('#e-l-geral').textContent = 'Esta conta está desativada. Procure um administrador para reativá-la.'; return; }
+  $('#e-l-geral').textContent = '';
+  pessoa.ultimoAcesso = agora();
+  state.perfil = perfilSel;
+  state.user = { id: pessoa.id, nome: pessoa.nome, email: em };
+  $('#tela-login').hidden = true; $('#tela-app').hidden = false;
+  $('#u-nome').textContent = state.user.nome; $('#u-perfil').textContent = { ADMINISTRADOR:'Administrador', ANALISTA:'Analista', LEITURA:'Leitura' }[state.perfil];
+  $('#u-ini').textContent = state.user.nome.replace(/\(.*?\)/g, '').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase(); $('#u-email').textContent = state.user.email;
+  if (!location.hash || location.hash === '#') location.hash = '#vagas'; else rota();
+});
+function sair(){ state.user = null; state.perfil = null; $('#tela-app').hidden = true; $('#tela-login').hidden = false; location.hash = ''; $('#l-email').focus(); }
+
+/* ====== roteador ====== */
+const MENU = [['vagas','Vagas'],['candidaturas','Candidaturas'],['beneficios','Benefícios'],['programas','Programas'],['conteudo','Conteúdo da vitrine'],['usuarios','Usuários'],['auditoria','Auditoria']];
+function rota(){
+  if (!state.user) return;
+  const r = (location.hash || '#vagas').slice(1);
+  const base = r.startsWith('vaga-') ? 'vagas' : r;
+  $('#menu-nav').innerHTML = MENU.filter(m => (m[0] !== 'auditoria' || pode('auditoria.ver')) && (m[0] !== 'usuarios' || pode('usuarios.gerenciar'))).map(m => `<a href="#${m[0]}"${m[0] === base ? ' aria-current="page"' : ''}>${m[1]}</a>`).join('');
+  let h;
+  if (r === 'vagas') h = vVagas();
+  else if (r === 'vaga-nova') h = vEditor(null);
+  else if (/^vaga-\d+$/.test(r)) h = vEditor(+r.slice(5));
+  else if (r === 'candidaturas') h = vCands();
+  else if (r === 'beneficios') h = vBeneficios();
+  else if (r === 'programas') h = vProgramas();
+  else if (r === 'conteudo') h = vConteudo();
+  else if (r === 'usuarios') h = pode('usuarios.gerenciar') ? vUsuarios() : `<h1>Sem acesso</h1><p>A gestão de usuários é exclusiva do perfil Administrador.</p>`;
+  else if (r === 'auditoria') h = pode('auditoria.ver') ? vAuditoria() : `<h1>Sem acesso</h1><p>A auditoria é exclusiva do perfil Administrador.</p>`;
+  else h = `<h1>Página não encontrada</h1><p><a href="#vagas">Voltar para as vagas</a></p>`;
+  $('#main').innerHTML = h;
+  if (/^vaga-/.test(r)) montaEditor(r === 'vaga-nova' ? null : +r.slice(5));
+  document.title = 'Portal do RH | ' + ($('#main h1') ? $('#main h1').textContent : '');
+  $('#main').focus(); window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', rota);
+
+/* ====== VAGAS: lista ====== */
+const nCands = id => state.cands.filter(c => c.vagaId === id).length;
+const CHEV = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function acoesLinha(v){
+  const ed = pode('vagas.editar');
+  const principal = `<a class="btn sec peq" href="#vaga-${v.id}">${ed && v.status !== 'ENCERRADA' ? 'Editar' : 'Ver'}</a>`;
+  if (!ed) return `<div class="acoes-linha">${principal}</div>`;
+  const normais = TRANS[v.status].filter(t => t[0] !== 'ENCERRADA'), enc = TRANS[v.status].find(t => t[0] === 'ENCERRADA');
+  const item = (t, cls) => `<li><button class="item ${cls}" type="button" data-acao="transicao" data-id="${v.id}" data-para="${t[0]}">${t[1]}</button></li>`;
+  return `<div class="acoes-linha">${principal}
+    <button class="btn sec peq" type="button" data-acao="pop" data-alvo="ml-${v.id}" aria-expanded="false" aria-controls="ml-${v.id}" aria-label="Mais ações para ${esc(v.titulo)}">Ações ${CHEV}</button>
+    <div class="popover" id="ml-${v.id}" hidden><ul>
+      ${normais.map(t => item(t, '')).join('')}
+      <li><button class="item" type="button" data-acao="duplicar" data-id="${v.id}">Duplicar</button></li>
+      ${enc ? '<li class="sep" role="separator"></li>' + item(enc, 'perigo') : ''}
+    </ul></div></div>`;
+}
+function linhasVagas(){
+  const f = state.fv, q = f.q.trim().toLowerCase();
+  const res = state.vagas.filter(v => (!f.status || v.status === f.status) && (!f.unidade || v.unidade === f.unidade) && (!q || v.titulo.toLowerCase().includes(q)));
+  if (!state.vagas.length) return `<div class="vazio"><p>Nenhuma vaga cadastrada ainda.</p>${pode('vagas.editar') ? '<a class="btn" href="#vaga-nova">Criar a primeira vaga</a>' : ''}</div>`;
+  if (!res.length) return `<div class="vazio"><p>Nenhuma vaga com esses filtros.</p><button class="btn sec" type="button" data-acao="limpar-fv">Limpar filtros</button></div>`;
+  return `<p class="contagem" aria-live="polite">${res.length === 1 ? '1 vaga' : res.length + ' vagas'}</p>
+  <div class="cartao rolagem"><table><caption class="sr" style="position:absolute;left:-999px">Vagas cadastradas</caption><thead><tr><th>Vaga</th><th>Unidade</th><th>Turno</th><th>Status</th><th>Candidaturas</th><th>Atualizada</th><th>Ações</th></tr></thead><tbody>
+  ${res.map(v => `<tr>
+    <td><a href="#vaga-${v.id}"><strong>${esc(v.titulo)}</strong></a><div class="ajuda">/vagas/${esc(v.slug)}</div></td>
+    <td>${esc(CIDADE[v.unidade])}</td><td>${esc(v.turno)}</td><td>${selo(v.status)}</td>
+    <td><a href="#candidaturas" data-acao="filtrar-cands" data-id="${v.id}">${nCands(v.id)}</a></td><td>${fmtDia(v.atualizadaEm)}</td>
+    <td>${acoesLinha(v)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function vVagas(){
+  const f = state.fv;
+  return `<div class="topo-pagina"><div><h1>Vagas</h1><p>Cadastre, publique e acompanhe as vagas do portal.</p></div>
+    ${pode('vagas.editar') ? '<a class="btn" href="#vaga-nova">Nova vaga</a>' : ''}</div>
+  ${pode('vagas.editar') ? '' : '<p class="somente">Seu perfil só consulta. Para criar ou alterar vagas, peça acesso de Analista.</p>'}
+  <div class="filtros">
+    <div class="busca"><label for="fv-q">Buscar pelo título</label><input id="fv-q" type="text" value="${esc(f.q)}"></div>
+    <div><label for="fv-status">Status</label><select id="fv-status">${'<option value="">Todos</option>' + Object.keys(ROT_STATUS).map(s => `<option value="${s}"${f.status === s ? ' selected' : ''}>${ROT_STATUS[s]}</option>`).join('')}</select></div>
+    <div><label for="fv-unidade">Unidade</label><select id="fv-unidade"><option value="">Todas</option>${UNIDADES.map(u => `<option value="${esc(u)}"${f.unidade === u ? ' selected' : ''}>${esc(CIDADE[u])}</option>`).join('')}</select></div>
+  </div><div id="tab-vagas">${linhasVagas()}</div>`;
+}
+function atualizaTabelaVagas(){ const el = $('#tab-vagas'); if (el) el.innerHTML = linhasVagas(); }
+
+/* ====== VAGAS: slug, status e duplicação ====== */
+function gerarSlug(titulo, unidade, ignorarId){
+  const base = titulo.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-' + CHAVE[unidade];
+  let s = base, n = 2;
+  while (state.vagas.some(v => v.slug === s && v.id !== ignorarId)) s = base + '-' + n++;
+  return s;
+}
+function mudarStatus(v, para){
+  const antes = v.status;
+  v.status = para; v.atualizadaEm = agora();
+  logar('Vaga', v.id, 'Status', antes, para);
+  if (para === 'PUBLICADA' && !v.publicadaEm){ v.publicadaEm = agora(); logar('Vaga', v.id, 'PublicadaEm', '', fmt(v.publicadaEm)); }
+  state.histVaga.push({ id: state.seq.hist++, vagaId: v.id, status: para, em: agora(), por: nomeUsuario() });
+  aviso(MSG_TRANS[para]);
+}
+async function transicao(id, para){
+  const v = state.vagas.find(x => x.id === id);
+  if (!v || !pode('vagas.editar') || !TRANS[v.status].some(t => t[0] === para)) return false;
+  if (para === 'ENCERRADA'){
+    const ok = await confirmar('Encerrar esta vaga?', 'A vaga sai do portal e não pode ser reaberta. Para divulgar de novo, duplique a vaga.', 'Encerrar vaga');
+    if (!ok) return false;
+  }
+  mudarStatus(v, para); return true;
+}
+function duplicar(id){
+  const o = state.vagas.find(x => x.id === id);
+  if (!o || !pode('vagas.editar')) return null;
+  const titulo = o.titulo + ' (cópia)';
+  const v = JSON.parse(JSON.stringify(o));
+  Object.assign(v, { id: state.seq.vaga++, titulo, slug: gerarSlug(titulo, o.unidade), status: 'RASCUNHO', publicadaEm: null, atualizadaEm: agora() });
+  state.vagas.push(v);
+  state.histVaga.push({ id: state.seq.hist++, vagaId: v.id, status: 'RASCUNHO', em: agora(), por: nomeUsuario() });
+  logar('Vaga', v.id, '(registro criado)', '', 'Duplicada da vaga #' + o.id + ' (' + o.titulo + ')');
+  aviso('Rascunho criado a partir da vaga duplicada.');
+  return v;
+}
+
+/* ====== VAGAS: editor ====== */
+const vazia = () => ({ id:null, slug:'', titulo:'', descricao:'', unidade:'', area:'', turno:'', contrato:'', modalidade:'', programa:'', status:'RASCUNHO', requisitos:[{ t:'', obrig:true }], atividades:[''], diferenciais:[], beneficios:[], salMin:'', salMax:'', exibirSalario:false, publicadaEm:null });
+function linhaTxt(lista, valor){ return `<div class="linha-lista"><input type="text" aria-label="Item" value="${esc(valor)}" data-lista="${lista}"><button class="btn perigo peq" type="button" data-acao="rem-linha">Remover</button></div>`; }
+function linhaReq(r){ return `<div class="linha-lista"><input type="text" aria-label="Requisito" value="${esc(r.t)}" data-lista="requisitos"><label><input type="checkbox"${r.obrig ? ' checked' : ''} data-obrig> Obrigatório</label><button class="btn perigo peq" type="button" data-acao="rem-linha">Remover</button></div>`; }
+function vEditor(id){
+  const novo = id == null;
+  const v = novo ? vazia() : state.vagas.find(x => x.id === id);
+  if (!v) return `<h1>Vaga não encontrada</h1><p><a href="#vagas">Voltar para as vagas</a></p>`;
+  const editavel = pode('vagas.editar') && v.status !== 'ENCERRADA';
+  const trava = !!v.publicadaEm;
+  const aviso1 = !pode('vagas.editar') ? '<p class="somente">Seu perfil só consulta. Os campos estão bloqueados.</p>'
+    : v.status === 'ENCERRADA' ? '<p class="somente">Vaga encerrada não pode ser editada nem reaberta. Para divulgar de novo, duplique a vaga na lista.</p>' : '';
+  const sel = (idc, rot, lista, val, rotuloVazio) => `<div class="campo"><label for="${idc}">${rot}</label><select id="${idc}" data-campo="${idc}">${opcoes(lista, val, rotuloVazio)}</select><div class="erro" id="e-${idc}"></div></div>`;
+  const hist = novo ? '' : state.histVaga.filter(h => h.vagaId === v.id).map(h => `<li>${ROT_STATUS[h.status]}, ${fmt(h.em)}, ${esc(h.por)}</li>`).join('');
+  return `<div class="topo-pagina"><div><p><a href="#vagas">Voltar para as vagas</a></p><h1>${novo ? 'Nova vaga' : esc(v.titulo)}</h1></div></div>
+  ${aviso1}
+  <div class="resumo-erros" id="resumo-erros" role="alert" tabindex="-1" hidden></div>
+  <form id="form-vaga" novalidate><fieldset id="campos-vaga"${editavel ? '' : ' disabled'}>
+  <div class="editor"><div>
+    <div class="cartao bloco"><h2>Dados da vaga</h2>
+      <div class="campo"><label for="titulo">Título</label><input id="titulo" type="text" data-campo="titulo" value="${esc(v.titulo)}"><div class="erro" id="e-titulo"></div></div>
+      <div class="campo"><label for="descricao">Descrição</label><textarea id="descricao" data-campo="descricao">${esc(v.descricao)}</textarea><div class="erro" id="e-descricao"></div></div>
+      <div class="grade3">${sel('unidade','Unidade',UNIDADES,v.unidade,'Escolha')}${sel('area','Área',AREAS,v.area,'Escolha')}${sel('turno','Turno',TURNOS,v.turno,'Escolha')}</div>
+      <div class="grade3">${sel('contrato','Tipo de contrato',CONTRATOS,v.contrato,'Escolha')}${sel('modalidade','Modalidade',MODALIDADES,v.modalidade,'Escolha')}
+        <div class="campo"><label for="programa">Programa <span class="ajuda">(opcional)</span></label><select id="programa" data-campo="programa">${'<option value="">Nenhum</option>' + state.programas.filter(p => p.ativo || p.nome === v.programa).map(p => `<option${p.nome === v.programa ? ' selected' : ''}>${esc(p.nome)}</option>`).join('')}</select></div></div>
+    </div>
+    <div class="cartao bloco"><h2>Requisitos</h2><div id="lista-requisitos">${v.requisitos.map(linhaReq).join('')}</div><button class="btn sec peq" type="button" data-acao="add-req">Adicionar requisito</button></div>
+    <div class="cartao bloco"><h2>O que a pessoa vai fazer</h2><div id="lista-atividades">${v.atividades.map(t => linhaTxt('atividades', t)).join('')}</div><button class="btn sec peq" type="button" data-acao="add-atv">Adicionar atividade</button></div>
+    <div class="cartao bloco"><h2>Diferenciais</h2><div id="lista-diferenciais">${v.diferenciais.map(t => linhaTxt('diferenciais', t)).join('')}</div><button class="btn sec peq" type="button" data-acao="add-dif">Adicionar diferencial</button></div>
+    <div class="cartao bloco"><h2>Benefícios da vaga</h2>
+      ${state.categorias.map(c => { const itens = state.beneficios.filter(b => b.categoria === c && (b.ativo || v.beneficios.includes(b.nome))); return itens.length ? `<fieldset class="cat-ben"><legend>${esc(c)}</legend>${itens.map(b => `<label class="check"><input type="checkbox" data-benef value="${esc(b.nome)}"${v.beneficios.includes(b.nome) ? ' checked' : ''}> ${esc(b.nome)}</label>`).join('')}</fieldset>` : ''; }).join('')}
+    </div>
+    <div class="cartao bloco"><h2>Faixa salarial</h2>
+      <div class="grade2"><div class="campo"><label for="salMin">Mínimo (R$)</label><input id="salMin" type="number" min="0" step="50" data-campo="salMin" value="${esc(v.salMin)}"><div class="erro" id="e-salMin"></div></div>
+      <div class="campo"><label for="salMax">Máximo (R$)</label><input id="salMax" type="number" min="0" step="50" data-campo="salMax" value="${esc(v.salMax)}"><div class="erro" id="e-salMax"></div></div></div>
+      <label class="check"><input type="checkbox" id="exibirSalario" data-campo="exibirSalario"${v.exibirSalario ? ' checked' : ''}> Mostrar a faixa salarial no portal público</label>
+      <p class="ajuda">Por padrão a faixa fica oculta no portal público.</p><div class="erro" id="e-exibirSalario"></div>
+    </div>
+  </div>
+  <aside class="lateral"><div class="cartao bloco">
+    <h2>Publicação</h2>
+    <dl><dt>Status</dt><dd id="st-atual">${selo(v.status)}</dd>
+    <dt>Endereço no portal</dt><dd id="slug-prev">/vagas/${esc(v.slug || '(gerado ao salvar)')}</dd>
+    ${trava ? '<dd class="ajuda" style="font-weight:400">O endereço fica fixo depois da publicação, para os links não quebrarem.</dd>' : ''}
+    <dt>Publicada em</dt><dd>${fmt(v.publicadaEm)}</dd></dl>
+    ${editavel ? `<div class="acoes-col"><button class="btn" type="submit">${novo ? 'Salvar como rascunho' : 'Salvar alterações'}</button>
+      ${TRANS[v.status].map(t => `<button class="btn ${t[0] === 'ENCERRADA' ? 'perigo' : 'sec'}" type="button" data-acao="salvar-e-${t[0]}" data-id="${v.id ?? ''}">${t[1]}</button>`).join('')}</div>` : ''}
+    ${hist ? `<h3 style="margin-top:16px">Histórico de status</h3><ul class="hist">${hist}</ul>` : ''}
+  </div></aside></div></fieldset></form>`;
+}
+function montaEditor(id){
+  const f = $('#form-vaga'); if (!f) return;
+  f.addEventListener('submit', e => { e.preventDefault(); salvarVaga(id); });
+  const atualizaSlug = () => {
+    const v = id == null ? null : state.vagas.find(x => x.id === id);
+    if (v && v.publicadaEm) return;
+    const t = $('#titulo').value.trim(), u = $('#unidade').value;
+    $('#slug-prev').textContent = '/vagas/' + (t && u ? gerarSlug(t, u, id) : '(gerado ao salvar)');
+  };
+  $('#titulo').addEventListener('input', atualizaSlug); $('#unidade').addEventListener('change', atualizaSlug);
+}
+function lerForm(){
+  const g = k => { const el = $('#form-vaga [data-campo=' + k + ']'); return el.type === 'checkbox' ? el.checked : el.value.trim(); };
+  const lista = k => $$('input[data-lista=' + k + ']').map(i => i.value.trim()).filter(Boolean);
+  return { titulo:g('titulo'), descricao:g('descricao'), unidade:g('unidade'), area:g('area'), turno:g('turno'), contrato:g('contrato'), modalidade:g('modalidade'), programa:g('programa'),
+    salMin:g('salMin'), salMax:g('salMax'), exibirSalario:g('exibirSalario'),
+    requisitos: $$('input[data-lista=requisitos]').map(i => ({ t:i.value.trim(), obrig:i.closest('.linha-lista').querySelector('[data-obrig]').checked })).filter(r => r.t),
+    atividades: lista('atividades'), diferenciais: lista('diferenciais'), beneficios: $$('input[data-benef]:checked').map(i => i.value) };
+}
+function validarVaga(d){
+  const e = {};
+  if (!d.titulo) e.titulo = 'Informe o título da vaga.';
+  if (!d.descricao) e.descricao = 'Informe a descrição da vaga.';
+  if (!d.unidade) e.unidade = 'Escolha a unidade.';
+  if (!d.area) e.area = 'Escolha a área.';
+  if (!d.turno) e.turno = 'Escolha o turno.';
+  if (!d.contrato) e.contrato = 'Escolha o tipo de contrato.';
+  if (!d.modalidade) e.modalidade = 'Escolha a modalidade.';
+  const mn = d.salMin === '' ? null : Number(d.salMin), mx = d.salMax === '' ? null : Number(d.salMax);
+  if (mn != null && mx != null && mx < mn) e.salMax = 'O máximo não pode ser menor que o mínimo.';
+  if (d.exibirSalario && (mn == null || mx == null)) e.exibirSalario = 'Informe o mínimo e o máximo para mostrar a faixa salarial.';
+  return e;
+}
+function mostraErros(e){
+  $$('.erro', $('#form-vaga')).forEach(x => x.textContent = ''); $$('[aria-invalid]', $('#form-vaga')).forEach(x => x.removeAttribute('aria-invalid'));
+  const res = $('#resumo-erros'), chaves = Object.keys(e);
+  if (!chaves.length){ res.hidden = true; res.innerHTML = ''; return; }
+  chaves.forEach(k => { $('#e-' + k).textContent = e[k]; const c = $('#' + k); if (c) c.setAttribute('aria-invalid', 'true'); });
+  res.innerHTML = `<strong>Corrija ${chaves.length === 1 ? '1 campo' : chaves.length + ' campos'} para salvar:</strong><ul>${chaves.map(k => `<li><a href="#" data-acao="ir-campo" data-ir="${k}">${esc(e[k])}</a></li>`).join('')}</ul>`;
+  res.hidden = false; res.focus();
+}
+const lista2txt = (arr, f) => arr.map(f).join('; ');
+function salvarVaga(id){
+  if (!pode('vagas.editar')) return null;
+  const d = lerForm(), e = validarVaga(d);
+  mostraErros(e);
+  if (Object.keys(e).length) return null;
+  if (id == null){
+    const v = Object.assign(vazia(), d, { id: state.seq.vaga++, atualizadaEm: agora() });
+    v.slug = gerarSlug(v.titulo, v.unidade, v.id);
+    state.vagas.push(v);
+    state.histVaga.push({ id: state.seq.hist++, vagaId: v.id, status: 'RASCUNHO', em: agora(), por: nomeUsuario() });
+    logar('Vaga', v.id, '(registro criado)', '', v.titulo + ' | slug ' + v.slug);
+    aviso('Rascunho salvo.');
+    location.hash = '#vaga-' + v.id;
+    return v;
+  }
+  const v = state.vagas.find(x => x.id === id);
+  const campos = [['Titulo','titulo'],['Descricao','descricao'],['UnidadeId','unidade'],['AreaId','area'],['TurnoId','turno'],['TipoContratoId','contrato'],['ModalidadeId','modalidade'],['ProgramaId','programa'],['SalarioMin','salMin'],['SalarioMax','salMax']];
+  campos.forEach(([c, k]) => logar('Vaga', id, c, v[k], d[k]));
+  logar('Vaga', id, 'ExibirSalario', v.exibirSalario ? 1 : 0, d.exibirSalario ? 1 : 0);
+  logar('VagaRequisito', id, 'Lista', lista2txt(v.requisitos, r => r.t + (r.obrig ? ' (obrigatório)' : ' (desejável)')), lista2txt(d.requisitos, r => r.t + (r.obrig ? ' (obrigatório)' : ' (desejável)')));
+  logar('VagaAtividade', id, 'Lista', v.atividades.join('; '), d.atividades.join('; '));
+  logar('VagaDiferencial', id, 'Lista', v.diferenciais.join('; '), d.diferenciais.join('; '));
+  logar('VagaBeneficio', id, 'Lista', [...v.beneficios].sort().join('; '), [...d.beneficios].sort().join('; '));
+  Object.assign(v, d, { atualizadaEm: agora() });
+  if (!v.publicadaEm){ const s = gerarSlug(v.titulo, v.unidade, v.id); logar('Vaga', id, 'Slug', v.slug, s); v.slug = s; }
+  aviso('Alterações salvas.');
+  rota();
+  return v;
+}
+
+/* ====== CANDIDATURAS ====== */
+const nomeCand = c => c.anonimizado ? 'Anonimizado' : c.nome;
+const vagaDe = c => c.vagaId == null ? null : state.vagas.find(v => v.id === c.vagaId);
+function linhasCands(){
+  const f = state.fc;
+  const res = state.cands.filter(c => (f.vaga === '' || (f.vaga === 'espontanea' ? c.vagaId == null : String(c.vagaId) === f.vaga)) && (!f.status || c.status === f.status));
+  if (!res.length) return `<div class="vazio"><p>Nenhuma candidatura com esses filtros.</p><button class="btn sec" type="button" data-acao="limpar-fc">Limpar filtros</button></div>`;
+  return `<p class="contagem" aria-live="polite">${res.length === 1 ? '1 candidatura' : res.length + ' candidaturas'}</p>
+  <div class="cartao rolagem"><table><thead><tr><th>Candidato</th><th>Vaga</th><th>Pretensão</th><th>Recebida em</th><th>Status</th><th>Detalhes</th></tr></thead><tbody>
+  ${res.map(c => { const v = vagaDe(c); return `<tr><td><strong>${esc(nomeCand(c))}</strong></td><td>${v ? esc(v.titulo) : 'Candidatura espontânea'}</td><td>${reais(c.pret)}</td><td>${fmtDia(c.criadaEm)}</td>
+    <td><label class="sr" for="st-${c.id}" style="position:absolute;left:-999px">Status de ${esc(nomeCand(c))}</label><select id="st-${c.id}" data-acao="mudar-cand" data-id="${c.id}"${pode('cands.editar') ? '' : ' disabled'}>${Object.keys(ROT_CAND).map(s => `<option value="${s}"${c.status === s ? ' selected' : ''}>${ROT_CAND[s]}</option>`).join('')}</select></td>
+    <td><button class="btn sec peq" type="button" data-acao="ver-cand" data-id="${c.id}">Ver</button></td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+function vCands(){
+  const f = state.fc;
+  return `<div class="topo-pagina"><div><h1>Candidaturas</h1><p>Acompanhe os currículos recebidos, por vaga e por status.</p></div></div>
+  ${pode('cands.editar') ? '' : '<p class="somente">Seu perfil só consulta. O status das candidaturas está bloqueado.</p>'}
+  <div class="filtros"><div><label for="fc-vaga">Vaga</label><select id="fc-vaga"><option value="">Todas</option><option value="espontanea"${f.vaga === 'espontanea' ? ' selected' : ''}>Candidaturas espontâneas</option>${state.vagas.map(v => `<option value="${v.id}"${f.vaga === String(v.id) ? ' selected' : ''}>${esc(v.titulo)}</option>`).join('')}</select></div>
+  <div><label for="fc-status">Status</label><select id="fc-status"><option value="">Todos</option>${Object.keys(ROT_CAND).map(s => `<option value="${s}"${f.status === s ? ' selected' : ''}>${ROT_CAND[s]}</option>`).join('')}</select></div></div>
+  <div id="tab-cands">${linhasCands()}</div>`;
+}
+function mudarCand(id, status){
+  const c = state.cands.find(x => x.id === id);
+  if (!c || !pode('cands.editar') || c.status === status) return false;
+  c.hist.push({ status, em: agora(), por: nomeUsuario() });
+  state.histCand.push({ candidaturaId: id, status, em: agora(), por: nomeUsuario() });
+  c.status = status;
+  aviso('Status atualizado.');
+  return true;
+}
+function verCand(id){
+  const c = state.cands.find(x => x.id === id); if (!c) return;
+  const v = vagaDe(c);
+  abrirDlg(`<h2>${esc(nomeCand(c))}</h2><dl class="det">
+    <dt>Vaga</dt><dd>${v ? esc(v.titulo) : 'Candidatura espontânea (banco de talentos)'}</dd>
+    <dt>E-mail</dt><dd>${esc(c.email)}</dd>${c.anonimizado ? '' : `<dt>Telefone</dt><dd>${esc(c.tel)}</dd><dt>Cidade</dt><dd>${esc(c.cidade)} (${esc(c.uf)})</dd>`}
+    <dt>Pretensão salarial</dt><dd>${reais(c.pret)}</dd>
+    <dt>Currículo</dt><dd>${c.anonimizado ? 'Arquivo removido na anonimização' : '<a href="#" data-acao="baixar-cv">curriculo-' + c.id + '.pdf</a> (arquivo de exemplo)'}</dd>
+    <dt>Histórico de status</dt><dd><ul class="hist" style="font-weight:400">${c.hist.map(h => `<li>${ROT_CAND[h.status]}, ${fmt(h.em)}, ${esc(h.por)}</li>`).join('')}</ul></dd></dl>
+    <div class="rodape-dlg"><button class="btn" type="button" data-cancelar>Fechar</button></div>`);
+  $('[data-cancelar]', dlg).onclick = fecharDlg;
+}
+
+/* ====== CADASTROS ====== */
+const rotuloEx = f => f ? '<span class="ex">exemplo</span>' : '';
+const somenteLeitura = () => pode('cadastros.editar') ? '' : '<p class="somente">Os cadastros são mantidos pelo perfil Administrador. Você pode consultar, mas não alterar.</p>';
+function vBeneficios(){
+  return `<div class="topo-pagina"><div><h1>Benefícios</h1><p>Catálogo exibido na vitrine e escolhido em cada vaga.</p></div>${pode('cadastros.editar') ? '<button class="btn" type="button" data-acao="novo-ben">Novo benefício</button>' : ''}</div>${somenteLeitura()}
+  ${state.categorias.map(c => `<h2 style="margin:18px 0 8px">${esc(c)}</h2><div class="cartao rolagem"><table><thead><tr><th>Ordem</th><th>Benefício</th><th>Frase curta</th><th>Ícone</th><th>Situação</th><th>Ações</th></tr></thead><tbody>
+  ${state.beneficios.filter(b => b.categoria === c).sort((a, b) => a.ordem - b.ordem).map(b => `<tr><td>${b.ordem}</td><td><strong>${esc(b.nome)}</strong>${rotuloEx(b.ficticio)}</td><td>${esc(b.desc)}</td><td>${esc(b.icone)}</td><td>${b.ativo ? 'Ativo' : 'Inativo'}</td>
+    <td>${pode('cadastros.editar') ? `<button class="btn sec peq" type="button" data-acao="edit-ben" data-id="${b.id}">Editar</button>` : '-'}</td></tr>`).join('')}</tbody></table></div>`).join('')}`;
+}
+function dlgBeneficio(id){
+  const b = id == null ? { categoria: state.categorias[0], nome:'', desc:'', icone: ICONES[0], ordem: 1, ativo:true } : state.beneficios.find(x => x.id === id);
+  abrirDlg(`<h2>${id == null ? 'Novo benefício' : 'Editar benefício'}</h2><form id="f-ben" novalidate>
+    <div class="campo"><label for="b-cat">Categoria</label><select id="b-cat">${opcoes(state.categorias, b.categoria)}</select></div>
+    <div class="campo"><label for="b-nome">Nome</label><input id="b-nome" type="text" value="${esc(b.nome)}"><div class="erro" id="e-b-nome"></div></div>
+    <div class="campo"><label for="b-desc">Frase curta do cartão <span class="ajuda">(até 160 caracteres)</span></label><input id="b-desc" type="text" maxlength="160" value="${esc(b.desc)}"><div class="erro" id="e-b-desc"></div></div>
+    <div class="grade2"><div class="campo"><label for="b-icone">Ícone</label><select id="b-icone">${opcoes(ICONES, b.icone)}</select></div>
+    <div class="campo"><label for="b-ordem">Ordem na categoria</label><input id="b-ordem" type="number" min="0" value="${b.ordem}"></div></div>
+    <label class="check"><input type="checkbox" id="b-ativo"${b.ativo ? ' checked' : ''}> Ativo (aparece na vitrine e nas vagas)</label>
+    <div class="rodape-dlg"><button class="btn sec" type="button" data-cancelar>Cancelar</button><button class="btn" type="submit">Salvar benefício</button></div></form>`);
+  $('[data-cancelar]', dlg).onclick = fecharDlg;
+  $('#f-ben').addEventListener('submit', ev => { ev.preventDefault(); salvarBeneficio(id); });
+}
+function salvarBeneficio(id){
+  if (!pode('cadastros.editar')) return false;
+  const d = { categoria: $('#b-cat').value, nome: $('#b-nome').value.trim(), desc: $('#b-desc').value.trim(), icone: $('#b-icone').value, ordem: Number($('#b-ordem').value) || 0, ativo: $('#b-ativo').checked };
+  let erro = '';
+  if (!d.nome) erro = 'Informe o nome do benefício.';
+  else if (state.beneficios.some(b => b.nome.toLowerCase() === d.nome.toLowerCase() && b.id !== id)) erro = 'Já existe um benefício com esse nome.';
+  $('#e-b-nome').textContent = erro; if (erro) return false;
+  if (id == null){ const b = Object.assign({ id: state.seq.ben++, ficticio: false }, d); state.beneficios.push(b); logar('Beneficio', b.id, '(registro criado)', '', b.nome); }
+  else { const b = state.beneficios.find(x => x.id === id); [['CategoriaId','categoria'],['Nome','nome'],['DescricaoCurta','desc'],['Icone','icone'],['Ordem','ordem'],['Ativo','ativo']].forEach(([c, k]) => logar('Beneficio', id, c, b[k], d[k])); Object.assign(b, d); }
+  fecharDlg(); aviso('Benefício salvo.'); rota(); return true;
+}
+function vProgramas(){
+  return `<div class="topo-pagina"><div><h1>Programas</h1><p>Estágio, aprendiz e trainee. Uma vaga pode pertencer a um programa.</p></div>${pode('cadastros.editar') ? '<button class="btn" type="button" data-acao="novo-prog">Novo programa</button>' : ''}</div>${somenteLeitura()}
+  <div class="cartao rolagem"><table><thead><tr><th>Programa</th><th>Descrição</th><th>Público</th><th>Situação</th><th>Ações</th></tr></thead><tbody>
+  ${state.programas.map(p => `<tr><td><strong>${esc(p.nome)}</strong>${rotuloEx(p.ficticio)}</td><td>${esc(p.desc)}</td><td>${esc(p.publico)}</td><td>${p.ativo ? 'Ativo' : 'Inativo'}</td>
+  <td>${pode('cadastros.editar') ? `<button class="btn sec peq" type="button" data-acao="edit-prog" data-id="${p.id}">Editar</button>` : '-'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function dlgPrograma(id){
+  const p = id == null ? { nome:'', desc:'', publico:'', ativo:true } : state.programas.find(x => x.id === id);
+  abrirDlg(`<h2>${id == null ? 'Novo programa' : 'Editar programa'}</h2><form id="f-prog" novalidate>
+    <div class="campo"><label for="p-nome">Nome</label><input id="p-nome" type="text" value="${esc(p.nome)}"><div class="erro" id="e-p-nome"></div></div>
+    <div class="campo"><label for="p-desc">Descrição</label><textarea id="p-desc">${esc(p.desc)}</textarea></div>
+    <div class="campo"><label for="p-pub">Público-alvo</label><input id="p-pub" type="text" value="${esc(p.publico)}"></div>
+    <label class="check"><input type="checkbox" id="p-ativo"${p.ativo ? ' checked' : ''}> Ativo</label>
+    <div class="rodape-dlg"><button class="btn sec" type="button" data-cancelar>Cancelar</button><button class="btn" type="submit">Salvar programa</button></div></form>`);
+  $('[data-cancelar]', dlg).onclick = fecharDlg;
+  $('#f-prog').addEventListener('submit', ev => { ev.preventDefault(); salvarPrograma(id); });
+}
+function salvarPrograma(id){
+  if (!pode('cadastros.editar')) return false;
+  const d = { nome: $('#p-nome').value.trim(), desc: $('#p-desc').value.trim(), publico: $('#p-pub').value.trim(), ativo: $('#p-ativo').checked };
+  let erro = '';
+  if (!d.nome) erro = 'Informe o nome do programa.'; else if (state.programas.some(p => p.nome.toLowerCase() === d.nome.toLowerCase() && p.id !== id)) erro = 'Já existe um programa com esse nome.';
+  $('#e-p-nome').textContent = erro; if (erro) return false;
+  if (id == null){ const p = Object.assign({ id: state.seq.prog++, ficticio: false }, d); state.programas.push(p); logar('Programa', p.id, '(registro criado)', '', p.nome); }
+  else { const p = state.programas.find(x => x.id === id); [['Nome','nome'],['Descricao','desc'],['PublicoAlvo','publico'],['Ativo','ativo']].forEach(([c, k]) => logar('Programa', id, c, p[k], d[k])); Object.assign(p, d); }
+  fecharDlg(); aviso('Programa salvo.'); rota(); return true;
+}
+function vConteudo(){
+  return `<div class="topo-pagina"><div><h1>Conteúdo da vitrine</h1><p>Textos institucionais exibidos no portal público.</p></div></div>${somenteLeitura()}
+  <div class="cartao rolagem"><table><thead><tr><th>Seção</th><th>Texto</th><th>No portal</th><th>Ações</th></tr></thead><tbody>
+  ${state.conteudo.map(c => `<tr><td><strong>${esc(c.titulo)}</strong>${rotuloEx(c.ficticio)}<div class="ajuda">${esc(c.secao)}</div></td><td>${esc(c.texto.length > 110 ? c.texto.slice(0, 110) + '...' : c.texto)}</td>
+    <td><label class="interruptor"><input type="checkbox" data-acao="publicar-cont" data-id="${c.id}"${c.publicado ? ' checked' : ''}${pode('cadastros.editar') ? '' : ' disabled'}> ${c.publicado ? 'Publicado' : 'Oculto'}</label></td>
+    <td>${pode('cadastros.editar') ? `<button class="btn sec peq" type="button" data-acao="edit-cont" data-id="${c.id}">Editar texto</button>` : '-'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function dlgConteudo(id){
+  const c = state.conteudo.find(x => x.id === id);
+  abrirDlg(`<h2>Editar: ${esc(c.titulo)}</h2><form id="f-cont" novalidate>
+    <div class="campo"><label for="c-tit">Título</label><input id="c-tit" type="text" value="${esc(c.titulo)}"><div class="erro" id="e-c-tit"></div></div>
+    <div class="campo"><label for="c-txt">Texto</label><textarea id="c-txt" style="min-height:170px">${esc(c.texto)}</textarea><div class="erro" id="e-c-txt"></div></div>
+    <div class="rodape-dlg"><button class="btn sec" type="button" data-cancelar>Cancelar</button><button class="btn" type="submit">Salvar texto</button></div></form>`);
+  $('[data-cancelar]', dlg).onclick = fecharDlg;
+  $('#f-cont').addEventListener('submit', ev => { ev.preventDefault(); salvarConteudo(id); });
+}
+function salvarConteudo(id){
+  if (!pode('cadastros.editar')) return false;
+  const t = $('#c-tit').value.trim(), x = $('#c-txt').value.trim();
+  $('#e-c-tit').textContent = t ? '' : 'Informe o título.'; $('#e-c-txt').textContent = x ? '' : 'Informe o texto.';
+  if (!t || !x) return false;
+  const c = state.conteudo.find(k => k.id === id);
+  logar('ConteudoInstitucional', id, 'Titulo', c.titulo, t); logar('ConteudoInstitucional', id, 'Texto', c.texto, x);
+  c.titulo = t; c.texto = x; fecharDlg(); aviso('Texto salvo.'); rota(); return true;
+}
+function publicarConteudo(id, valor){
+  if (!pode('cadastros.editar')) return false;
+  const c = state.conteudo.find(k => k.id === id);
+  logar('ConteudoInstitucional', id, 'Publicado', c.publicado ? 1 : 0, valor ? 1 : 0);
+  c.publicado = valor; aviso(valor ? 'Seção publicada.' : 'Seção ocultada.'); rota(); return true;
+}
+
+/* ====== USUÁRIOS (somente administrador) ====== */
+const PERFIL_ROT = { ADMINISTRADOR:'Administrador', ANALISTA:'Analista', LEITURA:'Leitura' };
+const PERFIL_DESC = { ADMINISTRADOR:'Faz tudo: vagas, candidaturas, cadastros, usuários e auditoria.', ANALISTA:'Gerencia vagas e candidaturas; só consulta os cadastros.', LEITURA:'Só consulta. Não altera nada.' };
+const situacao = u => !u.ativo ? 'Desativado' : (u.conviteAceito ? 'Ativo' : 'Convite pendente');
+const CLS_SIT = { 'Ativo':'s-PUBLICADA', 'Convite pendente':'s-PAUSADA', 'Desativado':'s-ENCERRADA' };
+const adminsQueEntram = () => state.usuarios.filter(u => u.ativo && u.conviteAceito && u.perfil === 'ADMINISTRADOR');
+const ehUltimoAdmin = u => u.ativo && u.conviteAceito && u.perfil === 'ADMINISTRADOR' && adminsQueEntram().length === 1;
+const ehEu = u => !!state.user && state.user.id === u.id;
+function motivoBloqueio(u){
+  if (ehEu(u)) return 'Você não pode desativar a si mesmo.';
+  if (ehUltimoAdmin(u)) return 'É o único administrador ativo. Cadastre outro administrador antes de desativar este.';
+  return '';
+}
+function acoesUsuario(u){
+  const s2 = situacao(u), mb = motivoBloqueio(u), it = [];
+  if (s2 === 'Convite pendente'){
+    it.push(`<li><button class="item" type="button" data-acao="reenviar-acesso" data-id="${u.id}">Reenviar convite</button></li>`);
+    it.push(`<li><button class="item" type="button" data-acao="simular-aceite" data-id="${u.id}">Simular aceite do convite <span class="ex">só no protótipo</span></button></li>`);
+  }
+  if (s2 === 'Ativo') it.push(`<li><button class="item" type="button" data-acao="reenviar-acesso" data-id="${u.id}">Enviar link de nova senha</button></li>`);
+  if (s2 === 'Desativado') it.push(`<li><button class="item" type="button" data-acao="ativar-usr" data-id="${u.id}">Reativar</button></li>`);
+  if (s2 !== 'Desativado'){
+    it.push('<li class="sep" role="separator"></li>');
+    it.push(mb ? `<li><button class="item perigo" type="button" aria-disabled="true" data-acao="bloqueado" data-motivo="${esc(mb)}" aria-describedby="mb-${u.id}">Desativar</button><p class="item-info" id="mb-${u.id}">${esc(mb)}</p></li>`
+               : `<li><button class="item perigo" type="button" data-acao="desativar-usr" data-id="${u.id}">Desativar</button></li>`);
+  }
+  return `<div class="acoes-linha"><button class="btn sec peq" type="button" data-acao="edit-usr" data-id="${u.id}">Editar</button>
+    <button class="btn sec peq" type="button" data-acao="pop" data-alvo="mu-${u.id}" aria-expanded="false" aria-controls="mu-${u.id}" aria-label="Mais ações para ${esc(u.nome)}">Ações ${CHEV}</button>
+    <div class="popover" id="mu-${u.id}" hidden><ul>${it.join('')}</ul></div></div>`;
+}
+function linhasUsuarios(){
+  const f = state.fu, q = f.q.trim().toLowerCase();
+  const res = state.usuarios.filter(u => (!f.sit || situacao(u) === f.sit) && (!q || (u.nome + ' ' + u.email).toLowerCase().includes(q)));
+  if (!res.length) return `<div class="vazio"><p>Nenhum usuário com esses filtros.</p><button class="btn sec" type="button" data-acao="limpar-fu">Limpar filtros</button></div>`;
+  return `<p class="contagem" aria-live="polite">${res.length === 1 ? '1 usuário' : res.length + ' usuários'}</p>
+  <div class="cartao rolagem"><table><thead><tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Último acesso</th><th>Ações</th></tr></thead><tbody>
+  ${res.map(u => `<tr><td><strong>${esc(u.nome)}</strong>${ehEu(u) ? '<span class="ex">você</span>' : ''}<div class="ajuda">${esc(u.email)}</div></td><td>${PERFIL_ROT[u.perfil]}</td>
+    <td><span class="selo ${CLS_SIT[situacao(u)]}">${situacao(u)}</span></td><td>${u.ultimoAcesso ? fmt(u.ultimoAcesso) : 'Nunca entrou'}</td><td>${acoesUsuario(u)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+function vUsuarios(){
+  const f = state.fu;
+  return `<div class="topo-pagina"><div><h1>Usuários</h1><p>Quem pode entrar no portal do RH e com qual perfil.</p></div><button class="btn" type="button" data-acao="novo-usr">Novo usuário</button></div>
+  <p class="ajuda" style="margin:0 0 12px">Usuários não são excluídos. Ao desativar, a pessoa perde o acesso e o histórico dela continua nos registros.</p>
+  <div class="filtros"><div class="busca"><label for="fu-q">Buscar por nome ou e-mail</label><input id="fu-q" type="text" value="${esc(f.q)}"></div>
+  <div><label for="fu-sit">Situação</label><select id="fu-sit"><option value="">Todas</option>${['Ativo','Convite pendente','Desativado'].map(x => `<option${f.sit === x ? ' selected' : ''}>${x}</option>`).join('')}</select></div></div>
+  <div id="tab-usuarios">${linhasUsuarios()}</div>`;
+}
+function dlgUsuario(id){
+  const novo = id == null, u = novo ? { nome:'', email:'', perfil:'' } : state.usuarios.find(x => x.id === id);
+  const motivo = novo ? '' : (ehEu(u) ? 'Você não pode mudar o seu próprio perfil.' : (ehUltimoAdmin(u) ? 'É o único administrador ativo. Cadastre outro administrador antes de mudar este perfil.' : ''));
+  abrirDlg(`<h2>${novo ? 'Novo usuário' : 'Editar usuário'}</h2><form id="f-usr" novalidate>
+    <div class="campo"><label for="u-nome-f">Nome</label><input id="u-nome-f" type="text" value="${esc(u.nome)}"><div class="erro" id="e-u-nome"></div></div>
+    <div class="campo"><label for="u-email-f">E-mail</label><input id="u-email-f" type="email" value="${esc(u.email)}"${novo ? '' : ' readonly'}><div class="erro" id="e-u-email"></div>
+      ${novo ? '' : '<div class="ajuda">Para trocar o e-mail, desative este usuário e cadastre um novo.</div>'}</div>
+    <fieldset class="perfis"${motivo ? ' disabled' : ''}><legend>Perfil de acesso</legend>
+      ${Object.keys(PERFIL_ROT).map(k => `<label><input type="radio" name="u-perfil" value="${k}"${u.perfil === k ? ' checked' : ''}><span><b>${PERFIL_ROT[k]}</b>${PERFIL_DESC[k]}</span></label>`).join('')}
+    </fieldset><div class="erro" id="e-u-perfil"></div>
+    ${motivo ? `<p class="ajuda">${motivo}</p>` : ''}
+    ${novo ? '<p class="ajuda">A pessoa recebe um e-mail com um link para criar a senha. O link expira e só pode ser usado uma vez. Você não vê nem define a senha.</p>' : ''}
+    <div class="rodape-dlg"><button class="btn sec" type="button" data-cancelar>Cancelar</button><button class="btn" type="submit">${novo ? 'Enviar convite' : 'Salvar usuário'}</button></div></form>`);
+  $('[data-cancelar]', dlg).onclick = fecharDlg;
+  $('#f-usr').addEventListener('submit', ev => { ev.preventDefault(); salvarUsuario(id); });
+}
+function validarUsuario(d, id){
+  const e = {};
+  if (d.nome.length < 3) e.nome = 'Informe o nome completo.';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) e.email = 'Informe um e-mail válido, como nome@exemplo.com.';
+  else if (state.usuarios.some(u => u.email.toLowerCase() === d.email.toLowerCase() && u.id !== id)) e.email = 'Já existe um usuário com esse e-mail.';
+  if (!d.perfil) e.perfil = 'Escolha o perfil de acesso.';
+  return e;
+}
+function salvarUsuario(id){
+  if (!pode('usuarios.gerenciar')) return false;
+  const r = $('input[name=u-perfil]:checked');
+  const d = { nome: $('#u-nome-f').value.trim(), email: $('#u-email-f').value.trim(), perfil: r ? r.value : '' };
+  const e = validarUsuario(d, id);
+  ['nome', 'email', 'perfil'].forEach(k => { $('#e-u-' + k).textContent = e[k] || ''; });
+  if (Object.keys(e).length){ const c = e.nome ? '#u-nome-f' : e.email ? '#u-email-f' : 'input[name=u-perfil]'; $(c).focus(); return false; }
+  if (id == null){
+    const u = { id: state.seq.usr++, nome: d.nome, email: d.email, perfil: d.perfil, ativo: true, conviteAceito: false, criadoEm: agora(), ultimoAcesso: null };
+    state.usuarios.push(u);
+    logar('UsuarioRh', u.id, '(registro criado)', '', `${u.nome} | ${u.email} | ${u.perfil}`);
+    logar('UsuarioRh', u.id, 'Convite enviado', '', fmt(agora()));
+    fecharDlg(); aviso('Convite enviado para ' + u.email + '.'); rota(); return u;
+  }
+  const u = state.usuarios.find(x => x.id === id);
+  if (d.perfil !== u.perfil){
+    if (ehEu(u)){ aviso('Você não pode mudar o seu próprio perfil.'); return false; }
+    if (ehUltimoAdmin(u)){ aviso('É o único administrador ativo. Cadastre outro administrador antes de mudar este perfil.'); return false; }
+  }
+  logar('UsuarioRh', id, 'Nome', u.nome, d.nome); logar('UsuarioRh', id, 'PerfilId', u.perfil, d.perfil);
+  u.nome = d.nome; u.perfil = d.perfil;
+  fecharDlg(); aviso('Usuário salvo.'); rota(); return u;
+}
+async function alterarSituacao(id, ativar){
+  if (!pode('usuarios.gerenciar')) return false;
+  const u = state.usuarios.find(x => x.id === id); if (!u) return false;
+  if (!ativar){
+    const mb = motivoBloqueio(u); if (mb){ aviso(mb); return false; }
+    const ok = await confirmar('Desativar ' + u.nome + '?', 'A pessoa perde o acesso agora e qualquer sessão aberta é encerrada. O histórico dela continua nos registros e você pode reativar depois.', 'Desativar usuário');
+    if (!ok) return false;
+    logar('UsuarioRh', id, 'Ativo', 1, 0); u.ativo = false; aviso('Usuário desativado.'); return true;
+  }
+  logar('UsuarioRh', id, 'Ativo', 0, 1); u.ativo = true; aviso('Usuário reativado.'); return true;
+}
+function reenviarAcesso(id){
+  const u = state.usuarios.find(x => x.id === id);
+  if (!u || !pode('usuarios.gerenciar') || !u.ativo) return false;
+  const pend = !u.conviteAceito;
+  logar('UsuarioRh', id, pend ? 'Convite reenviado' : 'Link de nova senha enviado', '', fmt(agora()));
+  aviso((pend ? 'Convite reenviado para ' : 'Link de nova senha enviado para ') + u.email + '.'); return true;
+}
+function simularAceite(id){
+  const u = state.usuarios.find(x => x.id === id);
+  if (!u || !pode('usuarios.gerenciar') || u.conviteAceito) return false;
+  u.conviteAceito = true; u.ultimoAcesso = agora();
+  logar('UsuarioRh', id, 'Convite aceito', '', fmt(agora()));
+  aviso('Convite aceito (simulação do protótipo).'); rota(); return true;
+}
+
+/* ====== AUDITORIA ====== */
+function vAuditoria(){
+  const tabelas = [...new Set(state.log.map(l => l.tabela))].sort();
+  const res = state.log.filter(l => !state.fl.tabela || l.tabela === state.fl.tabela);
+  return `<div class="topo-pagina"><div><h1>Auditoria</h1><p>Toda alteração feita neste portal fica registrada: quem, quando, em qual campo, e o valor antes e depois.</p></div></div>
+  <div class="filtros"><div><label for="fl-tabela">Tabela</label><select id="fl-tabela"><option value="">Todas</option>${tabelas.map(t => `<option${state.fl.tabela === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></div></div>
+  ${state.log.length === 0 ? '<div class="cartao vazio"><p>Nenhuma alteração registrada ainda.</p><p class="ajuda">Edite uma vaga, mude um status ou altere um cadastro e o registro aparece aqui.</p></div>'
+   : `<p class="contagem" aria-live="polite">${res.length === 1 ? '1 registro' : res.length + ' registros'}</p><div class="cartao rolagem"><table><thead><tr><th>Data e hora</th><th>Usuário</th><th>Tabela</th><th>Registro</th><th>Campo</th><th>Valor antigo</th><th>Valor novo</th></tr></thead><tbody>
+   ${res.map(l => `<tr><td>${fmt(l.em)}</td><td>${esc(l.por)}</td><td>${esc(l.tabela)}</td><td>#${l.registroId}</td><td>${esc(l.campo)}</td><td class="valor">${esc(l.antigo) || '-'}</td><td class="valor">${esc(l.novo) || '-'}</td></tr>`).join('')}</tbody></table></div>`}`;
+}
+
+/* ====== menus suspensos (ações da linha e conta) ====== */
+function fecharPopovers(){ $$('.popover').forEach(p => p.hidden = true); $$('[data-acao=pop]').forEach(b => b.setAttribute('aria-expanded', 'false')); }
+let abertoEm = 0;
+function abrirPopover(btn, pop){
+  abertoEm = Date.now(); pop.hidden = false; btn.setAttribute('aria-expanded', 'true');
+  const r = btn.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+  let top = r.bottom + 4;
+  if (top + h > window.innerHeight - 8 && r.top - h - 4 > 8) top = r.top - h - 4;
+  pop.style.left = left + 'px'; pop.style.top = top + 'px';
+  const primeiro = $('.item', pop); if (primeiro) primeiro.focus();
+}
+document.addEventListener('click', e => {
+  const gat = e.target.closest('[data-acao=pop]');
+  if (gat){ const pop = document.getElementById(gat.dataset.alvo); const abrir = pop.hidden; fecharPopovers(); if (abrir) abrirPopover(gat, pop); return; }
+  fecharPopovers();
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const gat = $('[data-acao=pop][aria-expanded=true]'); if (!gat) return;
+  fecharPopovers(); gat.focus();
+});
+window.addEventListener('scroll', () => { if (Date.now() - abertoEm > 250) fecharPopovers(); }, true);
+window.addEventListener('resize', fecharPopovers);
+
+/* ====== eventos delegados ====== */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-acao]'); if (!b) return;
+  const a = b.dataset.acao, id = b.dataset.id ? +b.dataset.id : null;
+  if (a === 'sair') sair();
+  else if (a === 'limpar-fv'){ state.fv = { q:'', status:'', unidade:'' }; rota(); }
+  else if (a === 'limpar-fc'){ state.fc = { vaga:'', status:'' }; rota(); }
+  else if (a === 'filtrar-cands'){ state.fc = { vaga: String(id), status:'' }; }
+  else if (a === 'transicao'){ if (await transicao(id, b.dataset.para)) rota(); }
+  else if (a === 'duplicar'){ const v = duplicar(id); if (v) location.hash = '#vaga-' + v.id; }
+  else if (a === 'add-req'){ $('#lista-requisitos').insertAdjacentHTML('beforeend', linhaReq({ t:'', obrig:true })); $$('#lista-requisitos input[type=text]').pop().focus(); }
+  else if (a === 'add-atv'){ $('#lista-atividades').insertAdjacentHTML('beforeend', linhaTxt('atividades', '')); $$('#lista-atividades input').pop().focus(); }
+  else if (a === 'add-dif'){ $('#lista-diferenciais').insertAdjacentHTML('beforeend', linhaTxt('diferenciais', '')); $$('#lista-diferenciais input').pop().focus(); }
+  else if (a === 'rem-linha') b.closest('.linha-lista').remove();
+  else if (a === 'ir-campo'){ e.preventDefault(); const c = $('#' + b.dataset.ir); if (c) c.focus(); }
+  else if (a.startsWith('salvar-e-')){ const v = salvarVaga(id); if (v && await transicao(v.id, a.slice(9))) rota(); }
+  else if (a === 'ver-cand') verCand(id);
+  else if (a === 'baixar-cv'){ e.preventDefault(); aviso('Arquivo de exemplo: no sistema, o currículo é baixado aqui.'); }
+  else if (a === 'novo-usr') dlgUsuario(null);
+  else if (a === 'edit-usr') dlgUsuario(id);
+  else if (a === 'ativar-usr'){ if (await alterarSituacao(id, true)) rota(); }
+  else if (a === 'desativar-usr'){ if (await alterarSituacao(id, false)) rota(); }
+  else if (a === 'reenviar-acesso') reenviarAcesso(id);
+  else if (a === 'simular-aceite') simularAceite(id);
+  else if (a === 'bloqueado') aviso(b.dataset.motivo);
+  else if (a === 'limpar-fu'){ state.fu = { q:'', sit:'' }; rota(); }
+  else if (a === 'novo-ben') dlgBeneficio(null);
+  else if (a === 'edit-ben') dlgBeneficio(id);
+  else if (a === 'novo-prog') dlgPrograma(null);
+  else if (a === 'edit-prog') dlgPrograma(id);
+  else if (a === 'edit-cont') dlgConteudo(id);
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'fv-status'){ state.fv.status = t.value; atualizaTabelaVagas(); }
+  else if (t.id === 'fv-unidade'){ state.fv.unidade = t.value; atualizaTabelaVagas(); }
+  else if (t.id === 'fc-vaga'){ state.fc.vaga = t.value; $('#tab-cands').innerHTML = linhasCands(); }
+  else if (t.id === 'fc-status'){ state.fc.status = t.value; $('#tab-cands').innerHTML = linhasCands(); }
+  else if (t.id === 'fu-sit'){ state.fu.sit = t.value; $('#tab-usuarios').innerHTML = linhasUsuarios(); }
+  else if (t.id === 'fl-tabela'){ state.fl.tabela = t.value; rota(); }
+  else if (t.dataset.acao === 'mudar-cand'){ mudarCand(+t.dataset.id, t.value); }
+  else if (t.dataset.acao === 'publicar-cont'){ publicarConteudo(+t.dataset.id, t.checked); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'fv-q'){ state.fv.q = e.target.value; atualizaTabelaVagas(); }
+  else if (e.target.id === 'fu-q'){ state.fu.q = e.target.value; $('#tab-usuarios').innerHTML = linhasUsuarios(); }
+});
+</script>
+</body>
+</html>
