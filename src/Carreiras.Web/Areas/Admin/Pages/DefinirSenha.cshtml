@@ -1,0 +1,35 @@
+@page "/admin/definir-senha"
+@model DefinirSenhaModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Criar senha";
+}
+<h1 class="h4 mb-3">Crie a sua senha</h1>
+@if (Model.LinkInvalido)
+{
+    <p class="aviso-erro" role="alert">Este link expirou ou já foi usado. Peça a um administrador para enviar outro.</p>
+    <a asp-area="Admin" asp-page="/Entrar">Ir para a entrada</a>
+}
+else
+{
+    @if (Model.Erros.Count > 0)
+    {
+        <div class="aviso-erro" role="alert">
+            <ul class="mb-0">@foreach (var e in Model.Erros) { <li>@e</li> }</ul>
+        </div>
+    }
+    <form method="post" novalidate>
+        <input type="hidden" name="uid" value="@Model.Uid" />
+        <input type="hidden" name="token" value="@Model.Token" />
+        <div class="mb-3">
+            <label class="form-label" for="Senha">Nova senha</label>
+            <input class="form-control" id="Senha" name="Senha" type="password" autocomplete="new-password" required aria-describedby="dica-senha" />
+            <div id="dica-senha" class="form-text">Pelo menos 10 caracteres, com letra maiúscula, minúscula e número.</div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Confirmacao">Repita a senha</label>
+            <input class="form-control" id="Confirmacao" name="Confirmacao" type="password" autocomplete="new-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Salvar senha</button>
+    </form>
+}

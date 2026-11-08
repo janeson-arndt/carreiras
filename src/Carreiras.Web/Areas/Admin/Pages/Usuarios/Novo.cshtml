@@ -1,0 +1,37 @@
+@page "/admin/usuarios/novo"
+@model Carreiras.Web.Areas.Admin.Pages.Usuarios.NovoModel
+@using Carreiras.Dominio.Usuarios
+@{
+    ViewData["Title"] = "Novo usuário";
+    ViewData["Menu"] = "usuarios";
+}
+<h1 class="h3 mb-3">Novo usuário</h1>
+<div class="cartao p-4" style="max-width: 36rem">
+    @if (Model.Erro != null)
+    {
+        <p class="aviso-erro" role="alert">@Model.Erro</p>
+    }
+    <p class="text-secundario">A pessoa recebe um e-mail com um link para criar a senha. O link expira e só pode ser usado uma vez. Você não vê nem define a senha.</p>
+    <form method="post" novalidate>
+        <div class="mb-3">
+            <label class="form-label" for="Nome">Nome</label>
+            <input class="form-control" id="Nome" name="Nome" value="@Model.Nome" maxlength="120" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Email">E-mail</label>
+            <input class="form-control" id="Email" name="Email" type="email" value="@Model.Email" maxlength="256" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="Perfil">Perfil</label>
+            <select class="form-select" id="Perfil" name="Perfil" aria-describedby="dica-perfil">
+                @foreach (var p in Perfis.Todos)
+                {
+                    <option value="@p" selected="@(Model.Perfil == p)">@p</option>
+                }
+            </select>
+            <div id="dica-perfil" class="form-text">Administrador faz tudo. Analista gerencia vagas e candidaturas e só consulta os cadastros. Leitura só consulta.</div>
+        </div>
+        <button class="btn btn-primary" type="submit">Cadastrar e enviar convite</button>
+        <a class="btn btn-neutro" asp-page="Index">Cancelar</a>
+    </form>
+</div>

@@ -1,0 +1,62 @@
+@using System.Security.Claims
+@using Carreiras.Web.Seguranca
+@{
+    var nome = User.FindFirstValue(Claims.Nome) ?? "";
+    var perfil = User.FindFirstValue(ClaimTypes.Role) ?? "";
+    var email = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name ?? "";
+    var iniciais = string.Concat(nome.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => char.ToUpperInvariant(p[0])));
+    var ativo = ViewData["Menu"] as string;
+    string Atual(string m) => ativo == m ? "page" : "";
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>@(ViewData["Title"] ?? "Portal do RH") · Portal de Carreiras</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/carreiras.css" asp-append-version="true" />
+</head>
+<body>
+<a class="visually-hidden-focusable" href="#conteudo">Ir para o conteúdo</a>
+<div class="admin">
+    <header class="admin-topo">
+        <a class="admin-marca" asp-area="Admin" asp-page="/Index">Metalúrgica Timboense <span class="text-secundario fw-normal">· Carreiras</span></a>
+        <div class="acoes">
+            <button type="button" class="btn btn-neutro d-flex align-items-center gap-2" data-acoes
+                    aria-expanded="false" aria-controls="menu-conta">
+                <span class="iniciais" aria-hidden="true">@iniciais</span>
+                <span class="text-start lh-sm"><span class="d-block">@nome</span><small class="text-secundario">@perfil</small></span>
+            </button>
+            <div class="acoes-lista" id="menu-conta" hidden>
+                <div class="motivo pt-2">@email</div>
+                <hr />
+                <form method="post" asp-area="Admin" asp-page="/Sair">
+                    <button type="submit">Sair</button>
+                </form>
+            </div>
+        </div>
+    </header>
+    <nav class="admin-menu" aria-label="Menu do portal do RH">
+        <a asp-area="Admin" asp-page="/Vagas/Index" aria-current="@Atual("vagas")">Vagas</a>
+        @if (User.IsInRole(Perfis.Administrador))
+        {
+            <div class="grupo">Administração</div>
+            <a asp-area="Admin" asp-page="/Usuarios/Index" aria-current="@Atual("usuarios")">Usuários</a>
+        }
+    </nav>
+    <main class="admin-conteudo" id="conteudo">
+        <div aria-live="polite">
+            @if (TempData["Aviso"] is string aviso) { <p class="aviso-ok" role="status">@aviso</p> }
+            @if (TempData["Erro"] is string erro) { <p class="aviso-erro" role="alert">@erro</p> }
+        </div>
+        @RenderBody()
+    </main>
+</div>
+<script src="~/js/admin.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

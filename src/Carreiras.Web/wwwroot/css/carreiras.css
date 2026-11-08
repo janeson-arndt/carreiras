@@ -1,0 +1,85 @@
+/* Tokens do Portal de Carreiras (CLAUDE.md, seção 8). O verde é contido: ação principal, item ativo, selos e links. */
+:root {
+  --c-verde-escuro: #006729;
+  --c-verde-escuro-hover: #004D1F;
+  --c-verde: #118F40;           /* só barras/bordas/números grandes; nunca texto pequeno */
+  --c-cinza: #717171;
+  --c-cinza-texto: #5C5C5C;
+  --c-fundo: #F3F4F3;
+  --c-verde-claro: #E4F1E8;
+  --c-texto: #232323;
+  --c-erro: #B3261E;
+  --c-erro-fundo: #FBE9E7;
+
+  --bs-body-font-family: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bs-body-color: var(--c-texto);
+  --bs-link-color: var(--c-verde-escuro);
+  --bs-link-hover-color: var(--c-verde-escuro-hover);
+  --bs-primary: var(--c-verde-escuro);
+  --bs-primary-rgb: 0, 103, 41;
+  --bs-danger: var(--c-erro);
+  --bs-danger-rgb: 179, 38, 30;
+  --bs-border-color: var(--c-cinza);
+}
+
+h1, h2, h3, h4, h5, .titulo { font-family: "Exo 2", "Source Sans 3", system-ui, sans-serif; font-weight: 700; color: var(--c-texto); }
+
+.btn-primary {
+  --bs-btn-bg: var(--c-verde-escuro); --bs-btn-border-color: var(--c-verde-escuro);
+  --bs-btn-hover-bg: var(--c-verde-escuro-hover); --bs-btn-hover-border-color: var(--c-verde-escuro-hover);
+  --bs-btn-active-bg: var(--c-verde-escuro-hover); --bs-btn-active-border-color: var(--c-verde-escuro-hover);
+  --bs-btn-disabled-bg: var(--c-verde-escuro); --bs-btn-disabled-border-color: var(--c-verde-escuro);
+}
+.btn-neutro {
+  --bs-btn-color: var(--c-texto); --bs-btn-bg: #fff; --bs-btn-border-color: var(--c-cinza);
+  --bs-btn-hover-bg: var(--c-fundo); --bs-btn-hover-border-color: var(--c-cinza); --bs-btn-hover-color: var(--c-texto);
+  --bs-btn-active-bg: var(--c-fundo); --bs-btn-active-color: var(--c-texto);
+}
+.form-control, .form-select { border-color: var(--c-cinza); }
+:focus-visible { outline: 3px solid var(--c-verde-escuro); outline-offset: 2px; }
+.text-secundario { color: var(--c-cinza-texto); }
+
+/* ---------- Portal do RH ---------- */
+.admin { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; background: var(--c-fundo); }
+.admin-topo { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: #fff; border-bottom: 1px solid #d4d4d4; padding: .6rem 1.25rem; }
+.admin-marca { font-family: "Exo 2", sans-serif; font-weight: 800; color: var(--c-verde-escuro); text-decoration: none; font-size: 1.15rem; }
+.admin-menu { background: #fff; border-right: 1px solid #d4d4d4; padding: 1rem .75rem; }
+.admin-menu a { display: block; padding: .5rem .75rem; border-radius: .4rem; color: var(--c-texto); text-decoration: none; margin-bottom: .15rem; }
+.admin-menu a:hover { background: var(--c-fundo); }
+.admin-menu a[aria-current="page"] { background: var(--c-verde-claro); color: var(--c-verde-escuro); font-weight: 600; box-shadow: inset 3px 0 0 var(--c-verde-escuro); }
+.admin-menu .grupo { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--c-cinza-texto); margin: 1rem .75rem .35rem; }
+.admin-conteudo { padding: 1.5rem; min-width: 0; }
+.cartao { background: #fff; border: 1px solid #d4d4d4; border-radius: .6rem; }
+.iniciais { display: inline-grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: var(--c-verde-claro); color: var(--c-verde-escuro); font-weight: 700; }
+
+.etiqueta { display: inline-block; padding: .1rem .55rem; border-radius: 1rem; font-size: .85rem; font-weight: 600; background: var(--c-verde-claro); color: var(--c-verde-escuro); }
+.etiqueta.pendente { background: #FFF4D6; color: #6B4E00; }
+.etiqueta.inativo { background: #E6E6E6; color: #3d3d3d; }
+.etiqueta.exemplo { background: #E8EEF9; color: #1F3F7A; }
+
+/* Menu Ações (disclosure) */
+.acoes { position: relative; display: inline-block; }
+.acoes-lista { position: absolute; right: 0; z-index: 20; min-width: 17rem; background: #fff; border: 1px solid var(--c-cinza);
+  border-radius: .5rem; padding: .35rem; box-shadow: 0 6px 18px rgba(0,0,0,.14); }
+.acoes-lista[hidden] { display: none; }
+.acoes-lista button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: .45rem .65rem; border-radius: .35rem; color: var(--c-texto); }
+.acoes-lista button:hover { background: var(--c-fundo); }
+.acoes-lista button[aria-disabled="true"] { color: var(--c-cinza-texto); cursor: not-allowed; }
+.acoes-lista .motivo { font-size: .85rem; color: var(--c-cinza-texto); padding: 0 .65rem .45rem; }
+.acoes-lista hr { margin: .3rem 0; }
+.acoes-lista .perigo { color: var(--c-erro); font-weight: 600; }
+
+.aviso-erro { background: var(--c-erro-fundo); border: 1px solid var(--c-erro); color: #7a1912; border-radius: .5rem; padding: .6rem .9rem; }
+.aviso-ok { background: var(--c-verde-claro); border: 1px solid var(--c-verde-escuro); color: #00441b; border-radius: .5rem; padding: .6rem .9rem; }
+.erro-campo { color: var(--c-erro); font-size: .9rem; }
+
+.pagina-auth { min-height: 100vh; display: grid; place-items: center; background: var(--c-fundo); padding: 1rem; }
+.pagina-auth .cartao { width: 100%; max-width: 26rem; padding: 1.75rem; }
+
+@media (max-width: 767px) {
+  .admin { grid-template-columns: 1fr; }
+  .admin-menu { border-right: 0; border-bottom: 1px solid #d4d4d4; display: flex; flex-wrap: wrap; gap: .25rem; padding: .5rem; }
+  .admin-menu .grupo { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

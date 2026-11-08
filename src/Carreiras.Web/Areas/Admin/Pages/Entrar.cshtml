@@ -1,0 +1,30 @@
+@page "/admin/entrar"
+@model EntrarModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Entrar";
+}
+<h1 class="h4 mb-3">Entrar</h1>
+@if (TempData["Aviso"] is string aviso)
+{
+    <p class="aviso-ok" role="status">@aviso</p>
+}
+@if (!string.IsNullOrEmpty(Model.Mensagem))
+{
+    <p class="aviso-erro" role="alert" id="erro-form">@Model.Mensagem</p>
+}
+<form method="post" novalidate>
+    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+    <div class="mb-3">
+        <label class="form-label" for="Email">E-mail</label>
+        <input class="form-control" asp-for="Email" type="email" autocomplete="username" required
+               aria-invalid="@(Model.Mensagem != null ? "true" : "false")" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="Senha">Senha</label>
+        <input class="form-control" asp-for="Senha" type="password" autocomplete="current-password" required
+               aria-invalid="@(Model.Mensagem != null ? "true" : "false")" />
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+</form>
+<p class="small text-secundario mt-3 mb-0">Recebeu um convite? Use o link que chegou por e-mail para criar a sua senha.</p>

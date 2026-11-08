@@ -1,0 +1,39 @@
+@page "/admin/usuarios/{id:int}"
+@model Carreiras.Web.Areas.Admin.Pages.Usuarios.EditarModel
+@using Carreiras.Dominio.Usuarios
+@{
+    ViewData["Title"] = "Editar usuário";
+    ViewData["Menu"] = "usuarios";
+}
+<h1 class="h3 mb-3">Editar usuário</h1>
+<div class="cartao p-4" style="max-width: 36rem">
+    @if (Model.Erro != null)
+    {
+        <p class="aviso-erro" role="alert">@Model.Erro</p>
+    }
+    <dl class="mb-3">
+        <dt>Nome</dt><dd>@Model.Usuario!.Nome</dd>
+        <dt>E-mail</dt><dd>@Model.Usuario.Email <span class="text-secundario">(não pode ser trocado: desative a conta e cadastre outra)</span></dd>
+    </dl>
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label" for="Perfil">Perfil</label>
+            @if (Model.Proprio)
+            {
+                <select class="form-select" id="Perfil" disabled aria-describedby="motivo-perfil"><option>@Model.Usuario.Perfil</option></select>
+                <div id="motivo-perfil" class="form-text">@RegrasUsuario.MotivoProprio Peça a outro administrador.</div>
+            }
+            else
+            {
+                <select class="form-select" id="Perfil" name="Perfil">
+                    @foreach (var p in Perfis.Todos)
+                    {
+                        <option value="@p" selected="@(Model.Usuario.Perfil == p)">@p</option>
+                    }
+                </select>
+            }
+        </div>
+        @if (!Model.Proprio) { <button class="btn btn-primary" type="submit">Salvar</button> }
+        <a class="btn btn-neutro" asp-page="Index">Voltar</a>
+    </form>
+</div>
