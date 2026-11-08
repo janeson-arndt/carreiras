@@ -259,6 +259,29 @@ FROM dbo.Unidade u, dbo.Area a, dbo.Turno t, dbo.TipoContrato c, dbo.Modalidade 
         else { Assert.True(Negado(r)); Assert.Equal(1, ativo); }
     }
 
+    [Theory]
+    [InlineData(Perfis.Administrador, true)]
+    [InlineData(Perfis.Analista, false)]
+    [InlineData(Perfis.Leitura, false)]
+    public async Task Auditoria_e_so_do_administrador(string perfil, bool permitido)
+    {
+        var c = await LogadoComoAsync(perfil);
+        foreach (var url in new[] { "/admin/auditoria", "/admin/auditoria?Tabela=Vaga&Pagina=2&De=2020-01-01", "/admin/auditoria?De=2026-12-31&Ate=2026-01-01" })
+        {
+            var r = await c.GetAsync(url);
+            if (permitido) Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+            else Assert.True(Negado(r), $"{perfil} acessou {url}: {r.StatusCode}");
+        }
+    }
+
+    [Fact]
+    public async Task Pagina_de_auditoria_mostra_aviso_quando_o_periodo_e_invalido()
+    {
+        var c = await LogadoComoAsync(Perfis.Administrador);
+        var html = WebUtility.HtmlDecode(await (await c.GetAsync("/admin/auditoria?De=2026-12-31&Ate=2026-01-01")).Content.ReadAsStringAsync());
+        Assert.Contains("data final não pode ser anterior", html);
+    }
+
     [Fact]
     public async Task Usuario_desativado_perde_a_sessao_aberta_e_nao_volta_a_entrar()
     {
