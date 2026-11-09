@@ -209,3 +209,4 @@ a.vaga .ver { font-weight: 600; color: var(--c-verde-texto); }
 .termo .versao-termo { color: var(--c-cinza-texto); margin-bottom: 18px; }
 .termo h2 { font-size: 24px; margin: 26px 0 8px; }
 @media (max-width: 575.98px) { .linha-cidade { grid-template-columns: 1fr 100px; } .form-candidatura .campo-curto { max-width: 100%; } }
+.links-rodape { margin: 24px 0 0; padding-top: 14px; border-top: 1px solid var(--c-linha); font-size: 15px; } .links-rodape + .nota { margin-top: 8px; padding-top: 0; border-top: 0; } .links-rodape a { color: var(--c-verde-texto); }

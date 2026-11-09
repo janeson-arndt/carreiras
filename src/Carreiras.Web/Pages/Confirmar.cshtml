@@ -16,14 +16,21 @@
     {
         <p class="selo-passo selo-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Pronto</p>
         <h1>Candidatura confirmada</h1>
-        <p class="lead">Recebemos sua candidatura para <strong>@e.VagaTitulo</strong>. O RH vai analisar seu currículo e entrar em contato se seguir com o processo.</p>
+        @if (e.VagaTitulo == null)
+        {
+            <p class="lead">Você está no <strong>banco de talentos</strong>. Quando surgir uma vaga para o seu perfil, o RH entra em contato.</p>
+        }
+        else
+        {
+            <p class="lead">Recebemos sua candidatura para <strong>@e.VagaTitulo</strong>. O RH vai analisar seu currículo e entrar em contato se seguir com o processo.</p>
+        }
         <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver outras vagas</a></p>
     }
     else if (e.Status == StatusConfirmacao.Ok)
     {
         <p class="selo-passo"><i class="bi bi-envelope-check" aria-hidden="true"></i> Último passo</p>
         <h1>Confirmar candidatura</h1>
-        <p class="lead">Vaga: <strong>@e.VagaTitulo</strong><br />E-mail: <strong>@e.EmailMascarado</strong></p>
+        <p class="lead">@(e.VagaTitulo == null ? "Cadastro" : "Vaga"): <strong>@(e.VagaTitulo ?? "banco de talentos")</strong><br />E-mail: <strong>@e.EmailMascarado</strong></p>
         <p>Clique no botão para enviar sua candidatura ao RH.</p>
         <form method="post">
             <button type="submit" class="btn btn-primary">Confirmar minha candidatura</button>
@@ -52,7 +59,7 @@
     else if (e.Status == StatusConfirmacao.JaCandidatou)
     {
         <h1>Você já se candidatou a esta vaga</h1>
-        <p class="lead">Encontramos uma candidatura sua para <strong>@e.VagaTitulo</strong>, então não criamos outra.</p>
+        <p class="lead">Encontramos uma candidatura sua para <strong>@(e.VagaTitulo ?? "o banco de talentos")</strong>, então não criamos outra.</p>
         <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
     }
     else if (e.Status == StatusConfirmacao.VagaIndisponivel)

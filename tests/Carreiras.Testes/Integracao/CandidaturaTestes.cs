@@ -71,9 +71,9 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
 
     private sealed record Form(string Antiforgery, string TokenDesafio, int Soma);
 
-    private async Task<Form> LerFormAsync(string slug, HttpClient? c = null)
+    private async Task<Form> LerFormAsync(string? slug, HttpClient? c = null)
     {
-        var r = await (c ?? _c).GetAsync($"/candidatar?vaga={slug}");
+        var r = await (c ?? _c).GetAsync(slug == null ? "/banco-de-talentos" : $"/candidatar?vaga={slug}");
         Assert.Equal(HttpStatusCode.OK, r.StatusCode);
         var doc = await Doc(await r.Content.ReadAsStringAsync());
         var af = doc.QuerySelector("input[name=__RequestVerificationToken]")!.GetAttribute("value")!;
@@ -84,7 +84,7 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
 
     private sealed class Envio
     {
-        public string Slug = "";
+        public string? Slug = "";
         public string Nome = "Maria da Silva";
         public string Email = "";
         public string Telefone = "(47) 99999-1234";
@@ -106,7 +106,7 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
         var mp = new MultipartFormDataContent();
         void Campo(string n, string? v) { if (v != null) mp.Add(new StringContent(v), n); }
         if (!e.SemAntiforgery) Campo("__RequestVerificationToken", f.Antiforgery);
-        Campo("vaga", e.Slug);
+        if (e.Slug != null) Campo("vaga", e.Slug);
         Campo("TokenDesafio", f.TokenDesafio);
         Campo("Resposta", (e.RespostaErrada ?? f.Soma).ToString());
         Campo("Nome", e.Nome); Campo("Email", e.Email); Campo("Telefone", e.Telefone);
@@ -114,10 +114,10 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
         Campo("Aceite", e.Aceite ? "true" : "false");
         Campo("site", e.Isca);
         if (e.Arquivo != null) mp.Add(new ByteArrayContent(e.Arquivo), "Curriculo", e.ArquivoNome);
-        return await c.PostAsync($"/candidatar?vaga={e.Slug}", mp);
+        return await c.PostAsync(e.Slug == null ? "/banco-de-talentos" : $"/candidatar?vaga={e.Slug}", mp);
     }
 
-    private Envio Novo(string slug, string? email = null) => new() { Slug = slug, Email = email ?? EmailNovo() };
+    private Envio Novo(string? slug, string? email = null) => new() { Slug = slug, Email = email ?? EmailNovo() };
 
     private async Task<List<string>> EmailsParaAsync(string email)
     {
@@ -568,7 +568,9 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
             Assert.Contains("Vaga não encontrada", await Txt(r));
         }
         Assert.Equal(HttpStatusCode.NotFound, (await _c.GetAsync("/candidatar?vaga=nao-existe")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await _c.GetAsync("/candidatar")).StatusCode);
+        var semVaga = await _c.GetAsync("/candidatar");   // sem vaga: vai para o banco de talentos
+        Assert.Equal(HttpStatusCode.Redirect, semVaga.StatusCode);
+        Assert.EndsWith("/banco-de-talentos", semVaga.Headers.Location!.ToString());
     }
 
     [Fact]
@@ -708,5 +710,278 @@ UPDATE ce SET ExpiraEm = DATEADD(DAY,-9,SYSUTCDATETIME()) FROM dbo.ConfirmacaoEm
         Assert.Contains("Versão " + Carreiras.Dominio.Candidaturas.TermoPrivacidade.VersaoAtual, html);
         Assert.Contains("sem revisão jurídica", html);
         Assert.Contains("12 meses", html);
+    }
+
+    // ================================================================== Entrega 05
+
+    private async Task<Envio> ConfirmadoAsync(string? slug)
+    {
+        var e = Novo(slug);
+        Assert.Equal(HttpStatusCode.Redirect, (await EnviarAsync(e)).StatusCode);
+        await ConfirmarClickAsync(await TokenAsync(e.Email));
+        return e;
+    }
+
+    private static string TokenTitular(string corpo) => Regex.Match(corpo, @"/meus-dados/confirmar/([A-Za-z0-9_-]+)").Groups[1].Value;
+
+    private async Task<HttpResponseMessage> PedirAsync(string email, string? tipo, bool captchaErrado = false, HttpClient? c = null)
+    {
+        c ??= _c;
+        var r = await c.GetAsync("/meus-dados");
+        var doc = await Doc(await r.Content.ReadAsStringAsync());
+        var af = doc.QuerySelector("input[name=__RequestVerificationToken]")!.GetAttribute("value")!;
+        var td = doc.QuerySelector("input[name=TokenDesafio]")!.GetAttribute("value")!;
+        var m = Regex.Match(doc.QuerySelector("label[for=Resposta]")!.TextContent, @"(\d+) \+ (\d+)");
+        var soma = int.Parse(m.Groups[1].Value) + int.Parse(m.Groups[2].Value) + (captchaErrado ? 1 : 0);
+        var campos = new List<KeyValuePair<string, string>>
+        {
+            new("__RequestVerificationToken", af), new("TokenDesafio", td), new("Resposta", soma.ToString()), new("Email", email),
+        };
+        if (tipo != null) campos.Add(new("Tipo", tipo));
+        return await c.PostAsync("/meus-dados", new FormUrlEncodedContent(campos));
+    }
+
+    private async Task<HttpResponseMessage> PostTitularAsync(string token)
+    {
+        var af = await AntiforgeryAsync();
+        return await _c.PostAsync($"/meus-dados/confirmar/{token}",
+            new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>("__RequestVerificationToken", af) }));
+    }
+
+    private async Task<string> UltimoTokenTitularAsync(string email)
+    {
+        var l = await EmailsParaAsync(email);
+        return TokenTitular(l[^1]);
+    }
+
+    [Fact]
+    public async Task Candidatura_espontanea_cria_candidatura_com_VagaId_nulo_so_apos_o_clique()
+    {
+        var e = Novo(null);
+        var r = await EnviarAsync(e);
+        Assert.Equal(HttpStatusCode.Redirect, r.StatusCode);
+        Assert.Equal(0, await CandidaturasAsync(e.Email));
+        var corpo = (await EmailsParaAsync(e.Email)).Single();
+        Assert.Contains("banco de talentos", corpo);
+
+        var token = await TokenAsync(e.Email);
+        Assert.Contains("banco de talentos", (await GetHtml($"/confirmar/{token}")).Html);
+        Assert.Equal(0, await CandidaturasAsync(e.Email));
+
+        var (_, ok) = await ConfirmarClickAsync(token);
+        Assert.Contains("banco de talentos", ok);
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidatura x JOIN dbo.Candidato c ON c.Id=x.CandidatoId WHERE c.Email=N'{e.Email}' AND x.VagaId IS NULL AND x.Status='RECEBIDA'"));
+    }
+
+    [Fact]
+    public async Task Segunda_candidatura_espontanea_do_mesmo_email_e_bloqueada()
+    {
+        var e = await ConfirmadoAsync(null);
+        var txt = await Txt(await EnviarAsync(e));
+        Assert.Contains("banco de talentos", txt);
+        Assert.Contains("Você já está", txt);
+        Assert.Equal(1, await CandidaturasAsync(e.Email));
+    }
+
+    [Fact]
+    public async Task Pessoa_do_banco_de_talentos_ainda_pode_se_candidatar_a_uma_vaga()
+    {
+        var e = await ConfirmadoAsync(null);
+        e.Slug = await CriarVagaAsync();
+        Assert.Equal(HttpStatusCode.Redirect, (await EnviarAsync(e)).StatusCode);
+        await ConfirmarClickAsync(await TokenAsync(e.Email));
+        Assert.Equal(2, await CandidaturasAsync(e.Email));
+    }
+
+    [Fact]
+    public async Task Banco_de_talentos_tem_formulario_completo_e_rodape_com_links_do_titular()
+    {
+        var doc = await Doc(await _c.GetStringAsync("/banco-de-talentos"));
+        foreach (var campo in new[] { "Nome", "Email", "Telefone", "Cidade", "Uf", "Curriculo", "Resposta", "Aceite" })
+            Assert.NotNull(doc.QuerySelector($"label[for={campo}]"));
+        Assert.Null(doc.QuerySelector("input[name=vaga]"));
+        Assert.NotNull(doc.QuerySelector("footer a[href$='/meus-dados']"));
+        Assert.NotNull(doc.QuerySelector("footer a[href$='/termo-de-privacidade']"));
+    }
+
+    [Fact]
+    public async Task Pedido_de_copia_so_e_atendido_depois_do_clique_e_registra_as_datas()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        var r = await PedirAsync(e.Email, "COPIA");
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Contains("Pedido recebido", await Txt(r));
+
+        var sol = $"FROM dbo.SolicitacaoTitular s JOIN dbo.Candidato c ON c.Id=s.CandidatoId WHERE c.Email=N'{e.Email}' AND s.Tipo='COPIA'";
+        Assert.Equal("ABERTA", await Escalar<string>("SELECT s.Status " + sol));
+        Assert.Equal(0, await Contar("SELECT COUNT(*) " + sol + " AND s.AtendidaEm IS NOT NULL"));
+        var token = await UltimoTokenTitularAsync(e.Email);
+        Assert.NotEmpty(token);
+
+        // abrir o link (GET) não atende
+        Assert.Contains("Enviar a cópia", (await GetHtml($"/meus-dados/confirmar/{token}")).Html);
+        Assert.Equal("ABERTA", await Escalar<string>("SELECT s.Status " + sol));
+        var antes = (await EmailsParaAsync(e.Email)).Count;
+
+        var ok = await PostTitularAsync(token);
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        Assert.Contains("Enviamos a cópia", await Txt(ok));
+        Assert.Equal("ATENDIDA", await Escalar<string>("SELECT s.Status " + sol));
+        Assert.Equal(1, await Contar("SELECT COUNT(*) " + sol + " AND s.AtendidaEm IS NOT NULL AND s.AbertaEm <= s.AtendidaEm"));
+
+        var emails = await EmailsParaAsync(e.Email);
+        Assert.Equal(antes + 1, emails.Count);
+        var copia = emails.Last();
+        Assert.Contains("Assunto: Cópia dos seus dados", copia);
+        Assert.Contains("Maria da Silva", copia);
+        Assert.Contains(e.Email, copia);
+        Assert.Contains("curriculo.pdf", copia);
+        Assert.Contains("RECEBIDA", copia);
+        Assert.Contains("versão " + Carreiras.Dominio.Candidaturas.TermoPrivacidade.VersaoAtual, copia);
+        // a cópia não altera nada
+        Assert.Equal(0, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{e.Email}' AND AnonimizadoEm IS NOT NULL"));
+    }
+
+    [Fact]
+    public async Task Pedido_de_exclusao_anonimiza_so_apos_o_clique_mantem_candidaturas_e_apaga_o_arquivo()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        var cv = await Escalar<string>($"SELECT cu.Caminho FROM dbo.Curriculo cu JOIN dbo.Candidato c ON c.Id=cu.CandidatoId WHERE c.Email=N'{e.Email}'");
+        Assert.True(File.Exists(Path.Combine(_pastaCurriculos, cv)));
+
+        await PedirAsync(e.Email, "EXCLUSAO");
+        var token = await UltimoTokenTitularAsync(e.Email);
+        // antes do clique: nada mudou
+        Assert.Contains("Excluir meus dados", (await GetHtml($"/meus-dados/confirmar/{token}")).Html);
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{e.Email}' AND AnonimizadoEm IS NULL"));
+        Assert.True(File.Exists(Path.Combine(_pastaCurriculos, cv)));
+
+        var id = await Escalar<int>($"SELECT Id FROM dbo.Candidato WHERE Email=N'{e.Email}'");
+        var ok = await PostTitularAsync(token);
+        Assert.Contains("Seus dados foram excluídos", await Txt(ok));
+
+        Assert.Equal(0, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{e.Email}'"));       // e-mail original liberado
+        Assert.Equal("Anonimizado", await Escalar<string>($"SELECT Nome FROM dbo.Candidato WHERE Id={id}"));
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Id={id} AND Telefone IS NULL AND Cidade IS NULL AND Uf IS NULL AND AnonimizadoEm IS NOT NULL"));
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidatura WHERE CandidatoId={id}"));       // candidaturas mantidas
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Curriculo WHERE CandidatoId={id} AND RemovidoEm IS NOT NULL"));
+        Assert.False(File.Exists(Path.Combine(_pastaCurriculos, cv)));                                       // arquivo apagado do disco
+        Assert.Equal(0, await Contar($"SELECT COUNT(*) FROM dbo.ConsentimentoLgpd WHERE CandidatoId={id} AND Ip IS NOT NULL"));
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.SolicitacaoTitular WHERE CandidatoId={id} AND Tipo='EXCLUSAO' AND Status='ATENDIDA' AND AtendidaEm IS NOT NULL"));
+
+        // link usado de novo: sem efeito
+        var deNovo = await _c.GetAsync($"/meus-dados/confirmar/{token}");
+        Assert.Equal(HttpStatusCode.NotFound, deNovo.StatusCode);
+
+        // o mesmo e-mail pode abrir um cadastro novo
+        Assert.Equal(HttpStatusCode.Redirect, (await EnviarAsync(Novo(e.Slug, e.Email))).StatusCode);
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{e.Email}' AND AnonimizadoEm IS NULL"));
+    }
+
+    [Fact]
+    public async Task Pedido_do_titular_tem_resposta_igual_para_email_desconhecido_e_nada_e_gravado()
+    {
+        var existente = await ConfirmadoAsync(await CriarVagaAsync());
+        var desconhecido = EmailNovo();
+        var a = await Txt(await PedirAsync(existente.Email, "COPIA"));
+        var b = await Txt(await PedirAsync(desconhecido, "COPIA"));
+        Assert.Equal(a, b);
+        Assert.Empty(await EmailsParaAsync(desconhecido));
+        Assert.Equal(0, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{desconhecido}'"));
+    }
+
+    [Fact]
+    public async Task Pedido_do_titular_exige_escolha_email_valido_e_captcha()
+    {
+        var r1 = await Txt(await PedirAsync("sem-arroba", null));
+        Assert.Contains("e-mail válido", r1);
+        Assert.Contains("Escolha o que você quer pedir", r1);
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        var r2 = await Txt(await PedirAsync(e.Email, "EXCLUSAO", captchaErrado: true));
+        Assert.Contains("A conta não confere", r2);
+        Assert.Equal(0, await Contar($"SELECT COUNT(*) FROM dbo.SolicitacaoTitular s JOIN dbo.Candidato c ON c.Id=s.CandidatoId WHERE c.Email=N'{e.Email}'"));
+    }
+
+    [Fact]
+    public async Task Link_do_titular_vencido_nao_executa_e_novo_pedido_invalida_o_anterior()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        await PedirAsync(e.Email, "EXCLUSAO");
+        var primeiro = await UltimoTokenTitularAsync(e.Email);
+        await PedirAsync(e.Email, "EXCLUSAO");
+        var segundo = await UltimoTokenTitularAsync(e.Email);
+        Assert.NotEqual(primeiro, segundo);
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.SolicitacaoTitular s JOIN dbo.Candidato c ON c.Id=s.CandidatoId WHERE c.Email=N'{e.Email}'")); // pedido reaproveitado
+        Assert.Contains("Este link foi substituído", (await GetHtml($"/meus-dados/confirmar/{primeiro}")).Html);
+
+        await _b.ExecutarAsync("UPDATE ce SET ExpiraEm = DATEADD(HOUR,-1,SYSUTCDATETIME()) FROM dbo.ConfirmacaoEmail ce JOIN dbo.Candidato c ON c.Id=ce.CandidatoId WHERE c.Email=@e AND ce.UsadoEm IS NULL", ("@e", e.Email));
+        Assert.Contains("Este link venceu", await Txt(await PostTitularAsync(segundo)));
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{e.Email}' AND AnonimizadoEm IS NULL"));
+    }
+
+    [Fact]
+    public async Task Pedidos_em_excesso_para_o_mesmo_email_sao_ignorados()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        for (var i = 0; i < 5; i++) await PedirAsync(e.Email, i % 2 == 0 ? "COPIA" : "EXCLUSAO");
+        Assert.Equal(3, (await EmailsParaAsync(e.Email)).Count(x => x.Contains("/meus-dados/confirmar/")));
+    }
+
+    [Fact]
+    public async Task Confirmar_pedido_do_titular_exige_antifalsificacao_e_tokens_nao_se_misturam()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        await PedirAsync(e.Email, "EXCLUSAO");
+        var token = await UltimoTokenTitularAsync(e.Email);
+        var semToken = await _c.PostAsync($"/meus-dados/confirmar/{token}", new FormUrlEncodedContent(Array.Empty<KeyValuePair<string, string>>()));
+        Assert.Equal(HttpStatusCode.BadRequest, semToken.StatusCode);
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Email=N'{e.Email}' AND AnonimizadoEm IS NULL"));
+
+        // o token de candidatura não abre pedido do titular, e o do titular não confirma candidatura
+        var outro = Novo(await CriarVagaAsync());
+        await EnviarAsync(outro);
+        var tokenCand = await TokenAsync(outro.Email);
+        Assert.Equal(HttpStatusCode.NotFound, (await _c.GetAsync($"/meus-dados/confirmar/{tokenCand}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _c.GetAsync($"/confirmar/{token}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Retencao_anonimiza_prazo_vencido_mantem_candidaturas_apaga_arquivo_e_libera_o_email()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        var cv = await Escalar<string>($"SELECT cu.Caminho FROM dbo.Curriculo cu JOIN dbo.Candidato c ON c.Id=cu.CandidatoId WHERE c.Email=N'{e.Email}'");
+        var id = await Escalar<int>($"SELECT Id FROM dbo.Candidato WHERE Email=N'{e.Email}'");
+        await _b.ExecutarAsync("UPDATE dbo.Candidato SET RetencaoAte = DATEADD(DAY,-1,SYSUTCDATETIME()) WHERE Id=@i", ("@i", id));
+
+        using var escopo = _fabrica.Services.CreateScope();
+        await escopo.ServiceProvider.GetRequiredService<RetencaoServico>().ExecutarAsync();
+
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidato WHERE Id={id} AND AnonimizadoEm IS NOT NULL AND Nome=N'Anonimizado'"));
+        Assert.Equal(1, await Contar($"SELECT COUNT(*) FROM dbo.Candidatura WHERE CandidatoId={id}"));
+        Assert.False(File.Exists(Path.Combine(_pastaCurriculos, cv)));
+        Assert.Equal(HttpStatusCode.Redirect, (await EnviarAsync(Novo(e.Slug, e.Email))).StatusCode);   // e-mail original liberado
+    }
+
+    [Fact]
+    public async Task Telas_da_entrega_05_passam_na_verificacao_de_estrutura()
+    {
+        var e = await ConfirmadoAsync(await CriarVagaAsync());
+        await PedirAsync(e.Email, "COPIA");
+        var token = await UltimoTokenTitularAsync(e.Email);
+
+        var htmls = new Dictionary<string, string>
+        {
+            ["/banco-de-talentos"] = await _c.GetStringAsync("/banco-de-talentos"),
+            ["/meus-dados"] = await _c.GetStringAsync("/meus-dados"),
+            ["/meus-dados (erros)"] = await (await PedirAsync("x", null)).Content.ReadAsStringAsync(),
+            ["/meus-dados (enviado)"] = await (await PedirAsync(EmailNovo(), "COPIA")).Content.ReadAsStringAsync(),
+            ["confirmar copia"] = await _c.GetStringAsync($"/meus-dados/confirmar/{token}"),
+            ["link invalido"] = await (await _c.GetAsync("/meus-dados/confirmar/xxx")).Content.ReadAsStringAsync(),
+        };
+        foreach (var (nome, html) in htmls)
+        {
+            var p = EstruturaTestes.Verificar(await Doc(html));
+            Assert.True(p.Count == 0, $"{nome}: {string.Join(" | ", p)}");
+        }
     }
 }

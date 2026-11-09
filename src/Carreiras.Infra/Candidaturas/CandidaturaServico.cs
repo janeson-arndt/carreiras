@@ -44,7 +44,7 @@ public sealed class CandidaturaServico
 
     /// <summary>Envia a candidatura: valida, guarda o currículo, grava o consentimento e manda o link por e-mail.</summary>
     public async Task<ResultadoEnvio> EnviarAsync(
-        string slugVaga, DadosCandidatura dados, string? nomeArquivo, Stream? arquivo, string? ip,
+        string? slugVaga, DadosCandidatura dados, string? nomeArquivo, Stream? arquivo, string? ip,
         Func<string, string> montarLink, CancellationToken ct = default)
     {
         var erros = ValidacaoCandidatura.Validar(dados);
@@ -52,10 +52,17 @@ public sealed class CandidaturaServico
         if (!res.Ok) erros["Curriculo"] = res.Erro!;
         if (erros.Count > 0) return new ResultadoEnvio(StatusEnvio.Invalido, Erros: erros);
 
-        var vaga = await _db.Vagas.AsNoTracking()
-            .Where(v => v.Slug == slugVaga && v.Status == "PUBLICADA")
-            .Select(v => new { v.Id, v.Titulo }).FirstOrDefaultAsync(ct);
-        if (vaga == null) return new ResultadoEnvio(StatusEnvio.VagaIndisponivel);
+        // slugVaga nulo = candidatura espontanea (banco de talentos): VagaId nulo
+        int? vagaId = null;
+        var tituloVaga = "Banco de talentos";
+        if (slugVaga != null)
+        {
+            var vaga = await _db.Vagas.AsNoTracking()
+                .Where(v => v.Slug == slugVaga && v.Status == "PUBLICADA")
+                .Select(v => new { v.Id, v.Titulo }).FirstOrDefaultAsync(ct);
+            if (vaga == null) return new ResultadoEnvio(StatusEnvio.VagaIndisponivel);
+            vagaId = vaga.Id; tituloVaga = vaga.Titulo;
+        }
 
         var email = ValidacaoCandidatura.NormalizarEmail(dados.Email);
         var agora = DateTime.UtcNow;
@@ -64,7 +71,7 @@ public sealed class CandidaturaServico
         if (candidato != null)
         {
             // RN09: uma candidatura por pessoa e vaga
-            if (await _db.Candidaturas.AnyAsync(c => c.CandidatoId == candidato.Id && c.VagaId == vaga.Id, ct))
+            if (await _db.Candidaturas.AnyAsync(c => c.CandidatoId == candidato.Id && c.VagaId == vagaId, ct))
                 return new ResultadoEnvio(StatusEnvio.JaCandidatou);
             var desde = agora.AddHours(-1);
             if (await _db.ConfirmacaoEmails.CountAsync(x => x.CandidatoId == candidato.Id && x.CriadaEm > desde, ct) >= _op.MaxEnviosPorHora)
@@ -111,14 +118,14 @@ public sealed class CandidaturaServico
             CandidatoId = candidato.Id, VersaoTermo = TermoPrivacidade.VersaoAtual, AceitoEm = agora, Ip = ip,
         });
 
-        await InvalidarAnterioresAsync(candidato.Id, vaga.Id, agora, ct);
+        await InvalidarAnterioresAsync(candidato.Id, vagaId, agora, ct);
         await _db.SaveChangesAsync(ct); // gera o Id do currículo
 
         var (token, hash) = TokenConfirmacao.Gerar();
         var conf = new ConfirmacaoEmail
         {
             CandidatoId = candidato.Id, CurriculoId = curriculo.Id, TokenHash = hash, Finalidade = FinalidadeCandidatura,
-            CriadaEm = agora, ExpiraEm = agora.AddHours(_op.HorasValidadeLink), VagaId = vaga.Id,
+            CriadaEm = agora, ExpiraEm = agora.AddHours(_op.HorasValidadeLink), VagaId = vagaId,
             PretensaoSalarial = dados.PretensaoSalarial,
             Nome = dados.Nome.Trim(), Telefone = dados.Telefone.Trim(), Cidade = dados.Cidade.Trim(),
             Uf = dados.Uf.Trim().ToUpperInvariant(),
@@ -126,7 +133,7 @@ public sealed class CandidaturaServico
         _db.ConfirmacaoEmails.Add(conf);
         await _db.SaveChangesAsync(ct);
 
-        await EnviarLinkAsync(email, vaga.Titulo, montarLink(token), ct);
+        await EnviarLinkAsync(email, tituloVaga, montarLink(token), ct);
         return new ResultadoEnvio(StatusEnvio.Ok, conf.Id);
     }
 
@@ -149,7 +156,7 @@ public sealed class CandidaturaServico
     private async Task<ResultadoEnvio> ReenviarAsync(ConfirmacaoEmail? ant, Func<string, string> montarLink, CancellationToken ct)
     {
         // sem dados pendentes (já usado ou limpo) não há o que reenviar
-        if (ant == null || ant.UsadoEm != null || ant.VagaId == null || ant.CurriculoId == null || ant.Nome == null)
+        if (ant == null || ant.UsadoEm != null || ant.CurriculoId == null || ant.Nome == null)
             return new ResultadoEnvio(StatusEnvio.Invalido);
 
         var agora = DateTime.UtcNow;
@@ -159,9 +166,14 @@ public sealed class CandidaturaServico
         var naHora = await _db.ConfirmacaoEmails.CountAsync(x => x.CandidatoId == candId && x.CriadaEm > agora.AddHours(-1), ct);
         if (recente || naHora >= _op.MaxEnviosPorHora) return new ResultadoEnvio(StatusEnvio.MuitasTentativas);
 
-        var vaga = await _db.Vagas.AsNoTracking().Where(v => v.Id == ant.VagaId && v.Status == "PUBLICADA")
-            .Select(v => new { v.Titulo }).FirstOrDefaultAsync(ct);
-        if (vaga == null) return new ResultadoEnvio(StatusEnvio.VagaIndisponivel);
+        var tituloVaga = "Banco de talentos";
+        if (ant.VagaId != null)
+        {
+            var vaga = await _db.Vagas.AsNoTracking().Where(v => v.Id == ant.VagaId && v.Status == "PUBLICADA")
+                .Select(v => new { v.Titulo }).FirstOrDefaultAsync(ct);
+            if (vaga == null) return new ResultadoEnvio(StatusEnvio.VagaIndisponivel);
+            tituloVaga = vaga.Titulo;
+        }
 
         var (token, hash) = TokenConfirmacao.Gerar();
         var nova = new ConfirmacaoEmail
@@ -177,7 +189,7 @@ public sealed class CandidaturaServico
         _db.ConfirmacaoEmails.Add(nova);
         await _db.SaveChangesAsync(ct);
 
-        await EnviarLinkAsync(ant.Candidato.Email, vaga.Titulo, montarLink(token), ct);
+        await EnviarLinkAsync(ant.Candidato.Email, tituloVaga, montarLink(token), ct);
         return new ResultadoEnvio(StatusEnvio.Ok, nova.Id);
     }
 
@@ -199,6 +211,7 @@ public sealed class CandidaturaServico
             return new ResultadoConfirmacao(virou ? StatusConfirmacao.Usado : StatusConfirmacao.Substituido, vaga?.Titulo, vaga?.Slug, mask);
         }
         if (c.ExpiraEm <= DateTime.UtcNow) return new ResultadoConfirmacao(StatusConfirmacao.Expirado, vaga?.Titulo, vaga?.Slug, mask);
+        if (c.VagaId == null) return new ResultadoConfirmacao(StatusConfirmacao.Ok, null, null, mask);   // banco de talentos
         if (vaga == null || vaga.Status != "PUBLICADA") return new ResultadoConfirmacao(StatusConfirmacao.VagaIndisponivel, vaga?.Titulo, vaga?.Slug, mask);
         return new ResultadoConfirmacao(StatusConfirmacao.Ok, vaga.Titulo, vaga.Slug, mask);
     }
@@ -258,7 +271,7 @@ public sealed class CandidaturaServico
     }
 
     /// <summary>Links anteriores ainda abertos deste candidato para a mesma vaga deixam de valer.</summary>
-    private async Task InvalidarAnterioresAsync(int candidatoId, int vagaId, DateTime agora, CancellationToken ct)
+    private async Task InvalidarAnterioresAsync(int candidatoId, int? vagaId, DateTime agora, CancellationToken ct)
     {
         var abertos = await _db.ConfirmacaoEmails
             .Where(x => x.CandidatoId == candidatoId && x.VagaId == vagaId && x.UsadoEm == null && x.ExpiraEm > agora)
@@ -279,10 +292,11 @@ public sealed class CandidaturaServico
 
     private async Task EnviarLinkAsync(string para, string tituloVaga, string link, CancellationToken ct)
     {
+        var descricao = tituloVaga == "Banco de talentos" ? "seu cadastro no banco de talentos" : "sua candidatura para a vaga \"" + tituloVaga + "\"";
         var corpo =
 $@"Olá!
 
-Recebemos sua candidatura para a vaga ""{tituloVaga}"" no Portal de Carreiras.
+Recebemos {descricao} no Portal de Carreiras.
 
 Para concluir, confirme seu e-mail neste link (vale por {_op.HorasValidadeLink} horas e só pode ser usado uma vez):
 

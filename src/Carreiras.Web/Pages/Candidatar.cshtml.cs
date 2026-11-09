@@ -45,6 +45,9 @@ public class CandidatarModel : PageModel
     /// <summary>Campo-isca: escondido para pessoas; robôs costumam preenchê-lo.</summary>
     [BindProperty(Name = "site")] public string? Isca { get; set; }
 
+    /// <summary>true no banco de talentos (candidatura sem vaga).</summary>
+    public virtual bool Espontanea => false;
+
     public VagaPublicaDetalhe? Vaga { get; private set; }
     public string Pergunta { get; private set; } = "";
     public string VersaoTermo => TermoPrivacidade.VersaoAtual;
@@ -54,6 +57,7 @@ public class CandidatarModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
+        if (!Espontanea && string.IsNullOrWhiteSpace(Slug)) return RedirectToPage("/BancoDeTalentos");
         if (!await CarregarVagaAsync()) return Page();
         NovoDesafio();
         return Page();
@@ -100,7 +104,7 @@ public class CandidatarModel : PageModel
                 return Page();
             }
 
-            resultado = await _candidaturas.EnviarAsync(Slug!, dados, Curriculo?.FileName, fluxo, Ip, LinkConfirmacao, ct);
+            resultado = await _candidaturas.EnviarAsync(Espontanea ? null : Slug, dados, Curriculo?.FileName, fluxo, Ip, LinkConfirmacao, ct);
         }
 
         switch (resultado.Status)
@@ -112,7 +116,9 @@ public class CandidatarModel : PageModel
                 foreach (var (campo, msg) in resultado.Erros!) ModelState.AddModelError(campo, msg);
                 break;
             case StatusEnvio.JaCandidatou:
-                ModelState.AddModelError(nameof(Email), "Você já se candidatou a esta vaga com este e-mail. Acompanhe pelo RH ou escolha outra vaga.");
+                ModelState.AddModelError(nameof(Email), Espontanea
+                    ? "Você já está no banco de talentos com este e-mail. Se quiser, candidate-se a uma vaga aberta."
+                    : "Você já se candidatou a esta vaga com este e-mail. Acompanhe pelo RH ou escolha outra vaga.");
                 break;
             case StatusEnvio.MuitasTentativas:
                 Response.StatusCode = StatusCodes.Status429TooManyRequests;
@@ -136,8 +142,9 @@ public class CandidatarModel : PageModel
         return origem + Url.Page("/Confirmar", new { token });
     }
 
-    private async Task<bool> CarregarVagaAsync()
+    protected async Task<bool> CarregarVagaAsync()
     {
+        if (Espontanea) return true;
         if (!string.IsNullOrWhiteSpace(Slug)) Vaga = await _vitrine.ObterVagaAsync(Slug);
         if (Vaga == null) Response.StatusCode = StatusCodes.Status404NotFound;
         return Vaga != null;

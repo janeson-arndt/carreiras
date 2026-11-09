@@ -445,7 +445,7 @@ VALUES (@slug, @titulo, N'Descrição da vaga de teste.', @u, @a, @t, @c, @m, @s
     {
         var ids = await Ids.Ler(_b);
         var slug = await CriarVagaAsync(Titulo(), "PUBLICADA", ids, ids.Timbo, await NovaAreaAsync(), ids.Turno1, ids.Clt);
-        foreach (var url in new[] { "/", "/vagas", $"/vagas/{slug}", "/vagas/inexistente", "/candidatar", "/banco-de-talentos" })
+        foreach (var url in new[] { "/", "/vagas", $"/vagas/{slug}", "/vagas/inexistente", $"/candidatar?vaga={slug}", "/banco-de-talentos" })
         {
             var d = await DocDe(url);
             foreach (var img in d.QuerySelectorAll("img"))

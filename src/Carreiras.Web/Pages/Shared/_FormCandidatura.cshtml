@@ -1,0 +1,121 @@
+@model Carreiras.Web.Pages.CandidatarModel
+@{
+    var v = Model.Vaga;
+    string? E(string campo) => ViewContext.ModelState.TryGetValue(campo, out var e) ? e.Errors.FirstOrDefault()?.ErrorMessage : null;
+    var ordem = new[] { "", "Nome", "Email", "Telefone", "Cidade", "Uf", "Curriculo", "PretensaoSalarial", "Resposta", "Aceite" };
+    var erros = ViewContext.ModelState.Where(x => x.Value!.Errors.Count > 0).OrderBy(x => Array.IndexOf(ordem, x.Key)).ToList();
+    var campos = new[]
+    {
+        (Id: "Nome", Rotulo: "Nome completo", Valor: Model.Nome, Auto: "name", Tipo: "text", Max: 120, Ajuda: (string?)null),
+        (Id: "Email", Rotulo: "E-mail", Valor: Model.Email, Auto: "email", Tipo: "email", Max: 256, Ajuda: "Vamos enviar um link para você confirmar a candidatura."),
+        (Id: "Telefone", Rotulo: "Telefone com DDD", Valor: Model.Telefone, Auto: "tel", Tipo: "tel", Max: 20, Ajuda: (string?)null),
+    };
+}
+<div class="wrap form-candidatura">
+    @if (erros.Count > 0)
+    {
+        <div id="resumo-erros" class="alert alert-danger" role="alert" tabindex="-1">
+            <strong>Confira o que precisa ser corrigido:</strong>
+            <ul>
+                @foreach (var x in erros)
+                {
+                    var msg = x.Value!.Errors[0].ErrorMessage;
+                    if (string.IsNullOrEmpty(x.Key)) { <li>@msg</li> }
+                    else { <li><a href="#@x.Key">@msg</a></li> }
+                }
+            </ul>
+        </div>
+    }
+
+    <p class="intro">Todos os campos são obrigatórios, menos a pretensão salarial. Depois de enviar, você recebe um e-mail com um link: a candidatura só vale depois do clique.</p>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        @if (v != null) { <input type="hidden" name="vaga" value="@v.Slug" /> }
+        <input type="hidden" name="TokenDesafio" value="@Model.TokenDesafio" />
+
+        @foreach (var c in campos)
+        {
+            var erro = E(c.Id);
+            <div class="campo">
+                <label class="form-label" for="@c.Id">@c.Rotulo</label>
+                <input id="@c.Id" name="@c.Id" type="@c.Tipo" class="form-control@(erro != null ? " is-invalid" : "")" value="@c.Valor"
+                       autocomplete="@c.Auto" maxlength="@c.Max" aria-required="true"
+                       aria-invalid="@(erro != null ? "true" : null)"
+                       aria-describedby="@(erro != null ? c.Id + "-erro" : (c.Ajuda != null ? c.Id + "-ajuda" : null))" />
+                @if (erro != null) { <div id="@(c.Id)-erro" class="erro-campo">@erro</div> }
+                else if (c.Ajuda != null) { <div id="@(c.Id)-ajuda" class="ajuda">@c.Ajuda</div> }
+            </div>
+        }
+
+        <div class="linha-cidade">
+            <div class="campo campo-cidade">
+                @{ var eCidade = E("Cidade"); }
+                <label class="form-label" for="Cidade">Cidade</label>
+                <input id="Cidade" name="Cidade" type="text" class="form-control@(eCidade != null ? " is-invalid" : "")" value="@Model.Cidade"
+                       autocomplete="address-level2" maxlength="80" aria-required="true"
+                       aria-invalid="@(eCidade != null ? "true" : null)" aria-describedby="@(eCidade != null ? "Cidade-erro" : null)" />
+                @if (eCidade != null) { <div id="Cidade-erro" class="erro-campo">@eCidade</div> }
+            </div>
+            <div class="campo campo-uf">
+                @{ var eUf = E("Uf"); }
+                <label class="form-label" for="Uf">Estado</label>
+                <select id="Uf" name="Uf" class="form-select@(eUf != null ? " is-invalid" : "")" autocomplete="address-level1" aria-required="true"
+                        aria-invalid="@(eUf != null ? "true" : null)" aria-describedby="@(eUf != null ? "Uf-erro" : null)">
+                    <option value="">UF</option>
+                    @foreach (var uf in CandidatarModel.Ufs)
+                    {
+                        <option value="@uf" selected="@(string.Equals(Model.Uf, uf, StringComparison.OrdinalIgnoreCase))">@uf</option>
+                    }
+                </select>
+                @if (eUf != null) { <div id="Uf-erro" class="erro-campo">@eUf</div> }
+            </div>
+        </div>
+
+        <div class="campo">
+            @{ var eCv = E("Curriculo"); }
+            <label class="form-label" for="Curriculo">Currículo (PDF ou DOCX, até 5 MB)</label>
+            <input id="Curriculo" name="Curriculo" type="file" class="form-control@(eCv != null ? " is-invalid" : "")" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                   aria-required="true" aria-invalid="@(eCv != null ? "true" : null)" aria-describedby="@(eCv != null ? "Curriculo-erro" : "Curriculo-ajuda")" />
+            <div id="Curriculo-erro" class="erro-campo" @(eCv == null ? "hidden" : null)>@eCv</div>
+            <div id="Curriculo-ajuda" class="ajuda">Se o arquivo não for aceito, salve o documento como PDF e envie de novo.</div>
+        </div>
+
+        <div class="campo">
+            @{ var ePret = E("PretensaoSalarial"); }
+            <label class="form-label" for="PretensaoSalarial">Pretensão salarial em R$ (opcional)</label>
+            <input id="PretensaoSalarial" name="PretensaoSalarial" type="text" inputmode="decimal" class="form-control campo-curto@(ePret != null ? " is-invalid" : "")"
+                   value="@Model.PretensaoSalarial" maxlength="20" aria-invalid="@(ePret != null ? "true" : null)"
+                   aria-describedby="@(ePret != null ? "PretensaoSalarial-erro" : "PretensaoSalarial-ajuda")" />
+            @if (ePret != null) { <div id="PretensaoSalarial-erro" class="erro-campo">@ePret</div> }
+            else { <div id="PretensaoSalarial-ajuda" class="ajuda">Só o RH vê este valor. Ele não aparece em nenhuma tela pública.</div> }
+        </div>
+
+        <div class="campo">
+            @{ var eResp = E("Resposta"); }
+            <label class="form-label" for="Resposta">Para confirmar que você é uma pessoa: @Model.Pergunta</label>
+            <input id="Resposta" name="Resposta" type="text" inputmode="numeric" autocomplete="off" value="" class="form-control campo-curto@(eResp != null ? " is-invalid" : "")"
+                   aria-required="true" aria-invalid="@(eResp != null ? "true" : null)" aria-describedby="@(eResp != null ? "Resposta-erro" : null)" />
+            @if (eResp != null) { <div id="Resposta-erro" class="erro-campo">@eResp</div> }
+        </div>
+
+        <div class="isca" aria-hidden="true">
+            <label for="site">Deixe este campo vazio</label>
+            <input id="site" name="site" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="campo campo-aceite">
+            @{ var eAceite = E("Aceite"); }
+            <div class="form-check">
+                <input id="Aceite" name="Aceite" type="checkbox" value="true" class="form-check-input@(eAceite != null ? " is-invalid" : "")" checked="@Model.Aceite"
+                       aria-required="true" aria-invalid="@(eAceite != null ? "true" : null)" aria-describedby="@(eAceite != null ? "Aceite-erro" : null)" />
+                <input type="hidden" name="Aceite" value="false" />
+                <label class="form-check-label" for="Aceite">
+                    Li e aceito o <a asp-page="/TermoPrivacidade" target="_blank" rel="noopener">termo de privacidade (abre em outra aba)</a>, versão @Model.VersaoTermo.
+                </label>
+            </div>
+            @if (eAceite != null) { <div id="Aceite-erro" class="erro-campo">@eAceite</div> }
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enviar candidatura</button>
+    </form>
+</div>

@@ -312,3 +312,18 @@ O portal é servido sob um prefixo configurável: `PathBase` (variável de ambie
 - Antes de HTTPS e produção: SMTP real (hoje o e-mail vai para arquivo), `Cookie.SecurePolicy = Always`, `Site:Origem`.
 - Currículo só é aberto pelo RH na Entrega 06; banco de talentos, "Meus dados" e candidatura espontânea são da Entrega 05.
 
+
+## 17. Status da Entrega 05 (banco de talentos e direitos do titular)
+
+**Rotas:** `/banco-de-talentos` (candidatura espontânea, mesmo formulário e mesmo fluxo da 04, com `VagaId` nulo; `/candidatar` sem vaga redireciona para cá), `/meus-dados` (pedido de cópia ou exclusão) e `/meus-dados/confirmar/{token}`. Rodapé público com links para termo de privacidade, Meus dados e banco de talentos.
+
+**Como é feito:** o formulário virou o parcial `_FormCandidatura`, usado por `CandidatarModel` e por `BancoDeTalentosModel` (herda e liga `Espontanea`). Uma pessoa tem no máximo uma entrada no banco de talentos; pode, além dela, se candidatar a vagas. `TitularServico` abre a `SolicitacaoTitular` (ABERTA), manda o link (token de 256 bits, só o hash no banco, `ConfirmacaoEmail` com Finalidade COPIA ou EXCLUSAO, 24 h) e, no clique, marca CONFIRMADA, executa e marca ATENDIDA com a data. Novo pedido do mesmo tipo reaproveita a solicitação aberta e invalida o link anterior.
+- **Cópia:** e-mail em texto com cadastro, candidaturas (vaga ou banco de talentos, situação, pretensão), currículos (nome, tamanho, data, sem o arquivo) e aceites do termo (versão, data, IP). Se o e-mail falhar, o link não é consumido.
+- **Exclusão:** `dbo.usp_AnonimizarCandidato` (db/004): marca currículos como removidos, apaga o IP dos aceites e as confirmações, troca e-mail por `anonimizado-{id}@invalid.local` e zera nome, telefone, cidade e UF. As candidaturas ficam. O arquivo é apagado do disco na hora. O e-mail original fica livre para novo cadastro.
+- **Retenção:** igual à 04 (`RetencaoServico`/`RetencaoDiaria`); cobre os critérios de anonimização, de candidaturas mantidas e de arquivos apagados.
+
+**Decisões:** GET no link só mostra o pedido e o POST executa (mesma razão da 04); a tela de pedido responde igual exista ou não o e-mail (não revela quem é candidato); no máximo 3 pedidos por hora por e-mail, os demais são ignorados em silêncio; sem confirmação o pedido não faz nada.
+
+**Atendido, com teste (13 novos; suíte em 312):** os seis critérios da Entrega 05, mais antifalsificação, captcha, links vencidos/substituídos e verificação de estrutura. Navegador: axe-core sem violações novas em `/banco-de-talentos` e `/meus-dados` (só o botão primário, exceção já conhecida).
+
+**Pendências deliberadas:** o texto do termo ainda não menciona o banco de talentos nem o canal "Meus dados" de forma detalhada (revisão jurídica); a cópia vai em texto, sem anexar o currículo; o RH só vê candidaturas espontâneas na Entrega 06 (visão própria).

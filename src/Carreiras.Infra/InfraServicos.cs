@@ -27,6 +27,7 @@ public static class InfraServicos
         services.AddSingleton<Candidaturas.ArmazenamentoCurriculos>();
         services.AddScoped<Candidaturas.CandidaturaServico>();
         services.AddScoped<Candidaturas.RetencaoServico>();
+        services.AddScoped<Candidaturas.TitularServico>();
         return services;
     }
 }

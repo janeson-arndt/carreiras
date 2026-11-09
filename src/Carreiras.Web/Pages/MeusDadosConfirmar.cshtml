@@ -1,0 +1,64 @@
+@page "/meus-dados/confirmar/{token}"
+@model Carreiras.Web.Pages.MeusDadosConfirmarModel
+@using Carreiras.Infra.Candidaturas
+@{
+    var e = Model.Estado;
+    var exclusao = e.Tipo == TitularServico.Exclusao;
+    ViewData["Title"] = "Meus dados: confirmar pedido";
+}
+@section Head { <meta name="robots" content="noindex" /><meta name="referrer" content="no-referrer" /> }
+<div class="wrap passo">
+    @if (Model.Aviso != null) { <div class="alert alert-danger" role="status">@Model.Aviso</div> }
+
+    @if (Model.Concluido && exclusao)
+    {
+        <p class="selo-passo selo-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Pronto</p>
+        <h1>Seus dados foram excluídos</h1>
+        <p class="lead">Removemos seus dados pessoais e apagamos o seu currículo. O e-mail pode ser usado em um novo cadastro quando você quiser.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else if (Model.Concluido)
+    {
+        <p class="selo-passo selo-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Pronto</p>
+        <h1>Enviamos a cópia dos seus dados</h1>
+        <p class="lead">A cópia foi enviada para <strong>@e.EmailMascarado</strong>.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else if (e.Status == StatusConfirmacao.Ok)
+    {
+        <p class="selo-passo"><i class="bi bi-shield-check" aria-hidden="true"></i> Último passo</p>
+        <h1>@(exclusao ? "Confirmar exclusão dos meus dados" : "Confirmar pedido de cópia dos meus dados")</h1>
+        <p class="lead">E-mail: <strong>@e.EmailMascarado</strong></p>
+        @if (exclusao)
+        {
+            <p><strong>A exclusão não pode ser desfeita.</strong> Seu nome, contato e currículo serão removidos. As candidaturas ficam no histórico do RH, sem identificar você.</p>
+        }
+        else
+        {
+            <p>Vamos enviar para esse e-mail os dados que guardamos sobre você.</p>
+        }
+        <form method="post">
+            <button type="submit" class="btn btn-primary">@(exclusao ? "Excluir meus dados" : "Enviar a cópia")</button>
+        </form>
+    }
+    else if (e.Status == StatusConfirmacao.Expirado)
+    {
+        <h1>Este link venceu</h1>
+        <p class="lead">O link vale por 24 horas. Faça o pedido de novo em <a asp-page="/MeusDados">Meus dados</a>.</p>
+    }
+    else if (e.Status == StatusConfirmacao.Usado)
+    {
+        <h1>Este link já foi usado</h1>
+        <p class="lead">O pedido já foi atendido.</p>
+    }
+    else if (e.Status == StatusConfirmacao.Substituido)
+    {
+        <h1>Este link foi substituído</h1>
+        <p class="lead">Você pediu um link mais novo, e só o último e-mail vale.</p>
+    }
+    else
+    {
+        <h1>Link inválido</h1>
+        <p class="lead">Não encontramos este link. Se você já confirmou a exclusão dos seus dados, ela foi concluída. Para fazer um pedido, use <a asp-page="/MeusDados">Meus dados</a>.</p>
+    }
+</div>

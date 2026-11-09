@@ -1,10 +1,18 @@
 @page "/banco-de-talentos"
+@model Carreiras.Web.Pages.BancoDeTalentosModel
 @{
     ViewData["Title"] = "Banco de talentos";
 }
-@section Head { <meta name="robots" content="noindex" /> }
-<div class="wrap nao-encontrada">
-    <h1>Banco de talentos</h1>
-    <p>Em breve você poderá deixar seu currículo aqui, sem escolher uma vaga, e nós avisamos quando surgir uma oportunidade para o seu perfil.</p>
-    <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+@section Head {
+    <meta name="robots" content="noindex" />
+    <script src="~/js/candidatar.js" asp-append-version="true" defer></script>
+}
+<div class="faixa faixa-curta">
+    <div class="wrap">
+        <p class="migalha"><a asp-page="/Vagas/Index">&larr; Ver vagas abertas</a></p>
+        <h1>Banco de talentos</h1>
+        <p class="vaga-nome">Deixe seu currículo sem escolher uma vaga. Avisamos quando surgir uma oportunidade para o seu perfil.</p>
+    </div>
 </div>
+
+<partial name="_FormCandidatura" model="Model" />

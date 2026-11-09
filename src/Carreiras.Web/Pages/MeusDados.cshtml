@@ -1,0 +1,81 @@
+@page "/meus-dados"
+@model Carreiras.Web.Pages.MeusDadosModel
+@{
+    ViewData["Title"] = "Meus dados";
+    string? E(string campo) => ModelState.TryGetValue(campo, out var e) ? e.Errors.FirstOrDefault()?.ErrorMessage : null;
+    var ordem = new[] { "", "Email", "Tipo", "Resposta" };
+    var erros = ModelState.Where(x => x.Value!.Errors.Count > 0).OrderBy(x => Array.IndexOf(ordem, x.Key)).ToList();
+    var eEmail = E("Email"); var eTipo = E("Tipo"); var eResp = E("Resposta");
+}
+@section Head {
+    <meta name="robots" content="noindex" />
+    <script src="~/js/candidatar.js" asp-append-version="true" defer></script>
+}
+<div class="faixa faixa-curta">
+    <div class="wrap">
+        <p class="migalha"><a asp-page="/Vagas/Index">&larr; Ver vagas abertas</a></p>
+        <h1>Meus dados</h1>
+        <p class="vaga-nome">Peça uma cópia dos dados que guardamos sobre você ou a exclusão deles.</p>
+    </div>
+</div>
+
+<div class="wrap form-candidatura">
+    @if (Model.Enviado)
+    {
+        <div class="alert alert-success" role="status">
+            <strong>Pedido recebido.</strong> Se este e-mail estiver na nossa base, enviamos agora um link de confirmação. Nada é feito até você clicar nele, e o link vale por 24 horas.
+        </div>
+        <p>Não chegou? Confira o spam. Se o e-mail nunca foi usado em uma candidatura, não há dados para entregar ou apagar.</p>
+        <p><a class="btn btn-sec" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else
+    {
+        @if (erros.Count > 0)
+        {
+            <div id="resumo-erros" class="alert alert-danger" role="alert" tabindex="-1">
+                <strong>Confira o que precisa ser corrigido:</strong>
+                <ul>
+                    @foreach (var x in erros)
+                    {
+                        var msg = x.Value!.Errors[0].ErrorMessage;
+                        if (string.IsNullOrEmpty(x.Key)) { <li>@msg</li> }
+                        else { <li><a href="#@x.Key">@msg</a></li> }
+                    }
+                </ul>
+            </div>
+        }
+        <p class="intro">Informe o e-mail que você usou na candidatura. Para sua segurança, enviamos um link para esse e-mail e só atendemos o pedido depois do clique. Veja também o <a asp-page="/TermoPrivacidade">termo de privacidade</a>.</p>
+
+        <form method="post" novalidate>
+            <input type="hidden" name="TokenDesafio" value="@Model.TokenDesafio" />
+            <div class="campo">
+                <label class="form-label" for="Email">E-mail</label>
+                <input id="Email" name="Email" type="email" class="form-control@(eEmail != null ? " is-invalid" : "")" value="@Model.Email" autocomplete="email" maxlength="256"
+                       aria-required="true" aria-invalid="@(eEmail != null ? "true" : null)" aria-describedby="@(eEmail != null ? "Email-erro" : null)" />
+                @if (eEmail != null) { <div id="Email-erro" class="erro-campo">@eEmail</div> }
+            </div>
+
+            <fieldset class="campo" aria-describedby="@(eTipo != null ? "Tipo-erro" : null)">
+                <legend class="form-label">O que você quer pedir?</legend>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="Tipo" id="Tipo" value="COPIA" checked="@(Model.Tipo == "COPIA")" />
+                    <label class="form-check-label" for="Tipo">Receber uma cópia dos meus dados (enviada para o seu e-mail)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="Tipo" id="Tipo-excluir" value="EXCLUSAO" checked="@(Model.Tipo == "EXCLUSAO")" />
+                    <label class="form-check-label" for="Tipo-excluir">Excluir meus dados (não pode ser desfeito)</label>
+                </div>
+                @if (eTipo != null) { <div id="Tipo-erro" class="erro-campo">@eTipo</div> }
+            </fieldset>
+
+            <div class="campo">
+                <label class="form-label" for="Resposta">Para confirmar que você é uma pessoa: @Model.Pergunta</label>
+                <input id="Resposta" name="Resposta" type="text" inputmode="numeric" autocomplete="off" value="" class="form-control campo-curto@(eResp != null ? " is-invalid" : "")"
+                       aria-required="true" aria-invalid="@(eResp != null ? "true" : null)" aria-describedby="@(eResp != null ? "Resposta-erro" : null)" />
+                @if (eResp != null) { <div id="Resposta-erro" class="erro-campo">@eResp</div> }
+            </div>
+
+            <button type="submit" class="btn btn-primary">Enviar pedido</button>
+        </form>
+    }
+</div>
