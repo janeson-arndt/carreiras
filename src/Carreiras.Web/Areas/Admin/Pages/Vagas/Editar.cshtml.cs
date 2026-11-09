@@ -61,6 +61,12 @@ public class EditarModel : PageModel
             Resumo = await _vagas.ResumoAsync(id.Value);
         }
         await CarregarListasAsync();
+        if (id is null)
+        {
+            // padrões da vaga nova: todos os benefícios marcados e a Matriz Timbó (local da maioria das vagas)
+            Form.BeneficioIds = Categorias.SelectMany(c => c.Beneficios).Select(b => b.Id).ToList();
+            Form.UnidadeId = Unidades.FirstOrDefault(u => u.Nome == "Matriz Timbó")?.Id ?? Form.UnidadeId;
+        }
         return Page();
     }
 

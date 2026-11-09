@@ -341,4 +341,19 @@ public class RevisaoEntrega02Testes : IDisposable
         Assert.Null(GestaoUsuarios.MotivoBloqueioDesativar(outroAtivo, 1, new[] { eu, outroAtivo }));
         Assert.Null(GestaoUsuarios.MotivoBloqueioDesativar(analista, 1, new[] { eu, analista }));
     }
+
+    [Fact]
+    public async Task Vaga_nova_ja_vem_com_beneficios_marcados_matriz_timbo_e_area_de_TI_disponivel()
+    {
+        var c = await AdminLogadoAsync(Fabrica());
+        var html = await c.GetStringAsync("/admin/vagas/editar");
+        var doc = await AngleSharp.BrowsingContextExtensions.OpenAsync(
+            AngleSharp.BrowsingContext.New(AngleSharp.Configuration.Default), r => r.Content(html));
+
+        var caixas = doc.QuerySelectorAll("input[name='Form.BeneficioIds']").ToList();
+        Assert.NotEmpty(caixas);
+        Assert.All(caixas, x => Assert.True(x.HasAttribute("checked")));
+        Assert.Equal("Matriz Timbó", doc.QuerySelector("#Form_UnidadeId option[selected]")?.TextContent.Trim());
+        Assert.Contains(doc.QuerySelectorAll("#Form_AreaId option"), o => o.TextContent.Trim() == "Tecnologia da Informação");
+    }
 }

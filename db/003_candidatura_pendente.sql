@@ -52,3 +52,11 @@ BEGIN
     COMMIT TRANSACTION;
 END;
 GO
+
+/* Nova area de vagas pedida pelo RH (idempotente). O nome usa NCHAR para nao depender da codificacao do arquivo
+   (sqlcmd le o arquivo na pagina de codigo do Windows e estragava os acentos). */
+DECLARE @ti nvarchar(80) = N'Tecnologia da Informa' + NCHAR(231) + NCHAR(227) + N'o';
+UPDATE dbo.Area SET Nome = @ti WHERE Nome LIKE N'Tecnologia da Informa%' AND Nome <> @ti;   -- corrige a carga com acento quebrado
+IF NOT EXISTS (SELECT 1 FROM dbo.Area WHERE Nome = @ti)
+    INSERT dbo.Area (Nome) VALUES (@ti);
+GO
