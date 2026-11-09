@@ -1,10 +1,12 @@
 /* Portal de Carreiras: tokens e componentes (CLAUDE.md, seção 8), alinhados ao protótipo docs/prototipo_admin_c.html.
    O Bootstrap 5 continua carregado; aqui os tokens sobrescrevem as variáveis dele e os componentes seguem o protótipo.
-   O verde é contido: ação principal, item ativo, selos e links. Nunca use var(--c-verde) como cor de texto. */
+   O verde da marca é #019641 (o da logo). Sobre branco ele dá 3,86:1: serve para botões, barras, bordas e título grande em negrito,
+   mas nunca como cor de texto pequeno (para isso há --c-verde-texto). */
 :root {
-  --c-verde-escuro: #006729;
+  --c-verde-texto: #018138;      /* links e texto verde pequeno: 5,0:1 no branco e 4,54:1 no fundo da página */
   --c-verde-escuro-hover: #004D1F;
-  --c-verde: #118F40;           /* só barras, bordas e números grandes; nunca texto pequeno */
+  --c-verde: #019641;           /* verde da marca (logo): botões, barras, bordas, aro do avatar; nunca texto pequeno */
+  --c-verde-hover: #017A35;     /* botão em hover/ativo (branco sobre ele: mais de 5:1) */
   --c-cinza: #717171;
   --c-cinza-texto: #5C5C5C;
   --c-fundo: #F3F4F3;
@@ -22,9 +24,9 @@
   --bs-body-line-height: 1.5;
   --bs-body-color: var(--c-texto);
   --bs-body-bg: var(--c-fundo);
-  --bs-link-color: var(--c-verde-escuro);
+  --bs-link-color: var(--c-verde-texto);
   --bs-link-hover-color: var(--c-verde-escuro-hover);
-  --bs-primary: var(--c-verde-escuro);
+  --bs-primary: var(--c-verde);
   --bs-primary-rgb: 0, 103, 41;
   --bs-danger: var(--c-erro);
   --bs-danger-rgb: 179, 38, 30;
@@ -36,9 +38,9 @@ h1, h2, h3, h4 { font-family: var(--titulo); font-weight: 700; line-height: 1.1;
 h1 { font-size: 30px; }
 h2 { font-size: 22px; }
 h3 { font-size: 18px; }
-a { color: var(--c-verde-escuro); }
-:focus-visible { outline: 3px solid var(--c-verde-escuro); outline-offset: 2px; }
-input[type=checkbox], input[type=radio] { accent-color: var(--c-verde-escuro); }
+a { color: var(--c-verde-texto); }
+:focus-visible { outline: 3px solid var(--c-verde); outline-offset: 2px; }
+input[type=checkbox], input[type=radio] { accent-color: var(--c-verde); }
 .text-secundario, .ajuda { color: var(--c-cinza-texto); }
 .ajuda { font-size: 14px; margin-top: 3px; }
 .titulo { font-family: var(--titulo); font-weight: 700; }
@@ -47,10 +49,10 @@ input[type=checkbox], input[type=radio] { accent-color: var(--c-verde-escuro); }
 .btn {
   --bs-btn-font-family: var(--corpo); --bs-btn-font-size: 15px; --bs-btn-font-weight: 600; --bs-btn-line-height: 1.5;
   --bs-btn-padding-x: 16px; --bs-btn-padding-y: 9px; --bs-btn-border-width: 2px; --bs-btn-border-radius: 6px;
-  --bs-btn-color: #FFFFFF; --bs-btn-bg: var(--c-verde-escuro); --bs-btn-border-color: var(--c-verde-escuro);
-  --bs-btn-hover-color: #FFFFFF; --bs-btn-hover-bg: var(--c-verde-escuro-hover); --bs-btn-hover-border-color: var(--c-verde-escuro-hover);
-  --bs-btn-active-color: #FFFFFF; --bs-btn-active-bg: var(--c-verde-escuro-hover); --bs-btn-active-border-color: var(--c-verde-escuro-hover);
-  --bs-btn-disabled-color: #FFFFFF; --bs-btn-disabled-bg: var(--c-verde-escuro); --bs-btn-disabled-border-color: var(--c-verde-escuro);
+  --bs-btn-color: #FFFFFF; --bs-btn-bg: var(--c-verde); --bs-btn-border-color: var(--c-verde);
+  --bs-btn-hover-color: #FFFFFF; --bs-btn-hover-bg: var(--c-verde-hover); --bs-btn-hover-border-color: var(--c-verde-hover);
+  --bs-btn-active-color: #FFFFFF; --bs-btn-active-bg: var(--c-verde-hover); --bs-btn-active-border-color: var(--c-verde-hover);
+  --bs-btn-disabled-color: #FFFFFF; --bs-btn-disabled-bg: var(--c-verde); --bs-btn-disabled-border-color: var(--c-verde);
   display: inline-block; text-align: center; text-decoration: none; cursor: pointer;
 }
 .btn-sec, .btn-neutro {
@@ -85,13 +87,16 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 /* ---------- layout do portal do RH ---------- */
 .admin { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; background: var(--c-fundo); }
 .admin-menu { background: #FFFFFF; border-right: 1px solid var(--c-linha); padding: 18px 0; display: flex; flex-direction: column; }
-.admin-marca { display: flex; align-items: center; gap: 10px; padding: 0 20px 14px; border-bottom: 1px solid var(--c-linha); margin-bottom: 10px; text-decoration: none; color: var(--c-verde-escuro); }
-.admin-marca strong { display: block; font: 800 18px/1.1 var(--titulo); color: var(--c-verde-escuro); }
-.admin-marca small { display: block; font-size: 14px; color: var(--c-cinza-texto); font-weight: 400; margin-top: 2px; }
-.admin-logo { height: 40px; width: auto; display: block; flex: none; }
+.admin-marca { display: flex; align-items: center; gap: 12px; padding: 0 20px 14px; border-bottom: 1px solid var(--c-linha); margin-bottom: 10px; text-decoration: none; }
+/* Marca: logo | divisor | rótulo curto na altura da logo. Em negrito e com 19px ou mais, o rótulo conta como texto grande (WCAG). */
+.admin-marca .divisor { width: 1px; align-self: stretch; background: var(--c-linha); flex: none; }
+.admin-rotulo { font: 800 19px/1.1 var(--titulo); color: var(--c-verde); }
+/* A logo (já sem a margem em volta) acompanha a altura do bloco de texto: nome em duas linhas + subtítulo. */
+.admin-logo { height: 48px; width: auto; display: block; flex: none; }
+.login-caixa .admin-logo { height: 56px; }
 .admin-menu nav a { display: block; color: var(--c-texto); text-decoration: none; padding: 10px 20px; border-left: 4px solid transparent; font-weight: 600; }
 .admin-menu nav a:hover { background: var(--c-fundo); }
-.admin-menu nav a[aria-current="page"] { background: var(--c-verde-claro); color: var(--c-verde-escuro-hover); border-left-color: var(--c-verde-escuro); }
+.admin-menu nav a[aria-current="page"] { background: var(--c-verde-claro); color: var(--c-verde-escuro-hover); border-left-color: var(--c-verde); }
 .admin-coluna { min-width: 0; display: flex; flex-direction: column; }
 .admin-topo { display: flex; justify-content: flex-end; align-items: center; padding: 8px 30px; background: #FFFFFF; border-bottom: 1px solid var(--c-linha); position: sticky; top: 0; z-index: 30; }
 .admin-conteudo { padding: 26px 30px 60px; min-width: 0; flex: 1; }
@@ -126,7 +131,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .cartao thead th:last-child { border-top-right-radius: 7px; }
 .cartao tbody tr:last-child td { border-bottom: 0; }
 .cartao td > a { color: var(--c-texto); }
-.cartao td > a:hover { color: var(--c-verde-escuro); }
+.cartao td > a:hover { color: var(--c-verde-texto); }
 .acoes-linha { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; white-space: nowrap; }
 .valor { max-width: 260px; word-break: break-word; }
 .interruptor { display: flex; gap: 8px; align-items: center; }
@@ -152,7 +157,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .grade2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .grade3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .cat-ben { margin-bottom: 12px; }
-.cat-ben legend { font-weight: 600; font-size: 14px; color: var(--c-verde-escuro); margin-bottom: 4px; float: none; width: auto; padding: 0; }
+.cat-ben legend { font-weight: 600; font-size: 14px; color: var(--c-verde-texto); margin-bottom: 4px; float: none; width: auto; padding: 0; }
 .lateral { position: sticky; top: 70px; }
 .lateral dl { margin: 0 0 12px; }
 .lateral dt { font-size: 13px; color: var(--c-cinza-texto); font-weight: 400; }
@@ -179,12 +184,13 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 /* ---------- avisos ---------- */
 .aviso-erro { background: var(--c-erro-fundo); border: 2px solid var(--c-erro); color: #7a1912; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
-.aviso-ok { background: var(--c-verde-claro); border: 1px solid var(--c-verde-escuro); color: #00441b; border-radius: 8px; padding: 10px 16px; margin-bottom: 14px; }
+.aviso-ok { background: var(--c-verde-claro); border: 1px solid var(--c-verde); color: #00441b; border-radius: 8px; padding: 10px 16px; margin-bottom: 14px; }
 
 /* ---------- entrada (login) ---------- */
 .pagina-auth { min-height: 100vh; display: grid; place-items: center; background: var(--c-fundo); padding: 24px; }
-.login-caixa { background: #FFFFFF; border: 1px solid var(--c-linha); border-top: 6px solid var(--c-verde-escuro); border-radius: 10px; padding: 28px; width: 100%; max-width: 460px; }
-.login-caixa .admin-marca { padding: 0; border: 0; margin: 0 0 14px; }
+.login-caixa { background: #FFFFFF; border: 1px solid var(--c-linha); border-top: 6px solid var(--c-verde); border-radius: 10px; padding: 28px; width: 100%; max-width: 460px; }
+.login-caixa .admin-marca { gap: 16px; padding: 0 0 16px; margin: 0 0 16px; }
+.login-caixa .admin-rotulo { font-size: 30px; line-height: 1; }
 .login-caixa .sub { color: var(--c-cinza-texto); margin: 4px 0 18px; }
 
 /* ---------- telas menores ---------- */
@@ -194,7 +200,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   .admin-marca { border: 0; margin: 0; padding: 0 16px; }
   .admin-menu nav { display: flex; flex-wrap: wrap; }
   .admin-menu nav a { padding: 8px 12px; border-left: 0; border-bottom: 3px solid transparent; }
-  .admin-menu nav a[aria-current="page"] { border-bottom-color: var(--c-verde-escuro); }
+  .admin-menu nav a[aria-current="page"] { border-bottom-color: var(--c-verde); }
   .admin-topo { padding: 6px 16px; }
   .admin-conteudo { padding: 18px 16px 50px; }
   .editor { grid-template-columns: 1fr; }

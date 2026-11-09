@@ -166,8 +166,11 @@ As Entregas 01 a 04 formam o MVP funcional. Critérios por entrega:
 
 | Token | Valor | Uso |
 |---|---|---|
-| Verde escuro | `#006729` | Ação principal, links, faixa da vaga, cartões escuros. Hover `#004D1F`. |
-| Verde | `#118F40` | Barras, bordas, números grandes. **Não use em texto pequeno nem como fundo de texto branco** (contraste 4,18:1, abaixo de 4,5:1). |
+| Verde da marca (`--c-verde`) | `#019641` | **Decisão do dono do produto (08/11/2026): é o verde da logo.** Botões primários, barras, bordas, aro do avatar, borda do login, nome da marca (19px em negrito = texto grande). Hover do botão `#017A35`. **Não use como cor de texto pequeno**: sobre branco dá 3,86:1. |
+| Verde de texto (`--c-verde-texto`) | `#018138` | Links e texto verde pequeno (5,0:1 no branco e 4,54:1 no fundo da página). Hover de link e texto sobre verde claro: `#004D1F`. |
+| ~~Verde escuro `#006729` e verde `#118F40`~~ | | Substituídos pelos dois acima. |
+
+> **Exceção de acessibilidade conhecida:** o rótulo branco dos botões primários sobre `#019641` dá 3,86:1, abaixo dos 4,5:1 do WCAG AA para texto normal (o axe-core aponta `color-contrast` em `.btn-primary`). Foi uma escolha explícita do dono do produto. `ContrasteTestes` registra o piso de 3:1 e exige 4,5:1 no hover. Para voltar a AA, basta usar `#01893B` ou mais escuro no fundo do botão.
 | Cinza | `#717171` | Bordas de campos e cartões. Texto secundário usa `#5C5C5C`. |
 | Fundo | `#F3F4F3` | Faixas e blocos de apoio. |
 | Verde claro | `#E4F1E8` | Cartões claros, etiquetas, item ativo do menu. |
