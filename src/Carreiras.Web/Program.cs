@@ -18,6 +18,11 @@ builder.Services.AddScoped<Carreiras.Infra.Cadastros.CadastroServico>();
 builder.Services.AddScoped<Carreiras.Infra.Cadastros.ConteudoServico>();
 builder.Services.AddScoped<Carreiras.Infra.Auditoria.AuditoriaConsulta>();
 builder.Services.AddScoped<Carreiras.Infra.Vitrine.VitrineServico>();
+builder.Services.Configure<Carreiras.Web.Seguranca.LimiteOpcoes>(builder.Configuration.GetSection("RateLimit"));
+builder.Services.AddSingleton<Carreiras.Web.Seguranca.LimitadorTentativas>();
+builder.Services.AddSingleton<Carreiras.Web.Seguranca.DesafioHumano>();
+builder.Services.AddSingleton<Carreiras.Web.Seguranca.ReferenciaEnvio>();
+builder.Services.AddHostedService<Carreiras.Infra.Candidaturas.RetencaoDiaria>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioAuditoria, UsuarioAuditoriaHttp>();
 

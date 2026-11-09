@@ -42,7 +42,7 @@ public sealed class BancoTeste : IAsyncLifetime
         ConexaoApp = ConexaoAdmin;
 
         var raizRepo = AchaRaiz();
-        foreach (var arq in new[] { "carreiras_entrega01.sql", "002_usuarios.sql" })
+        foreach (var arq in new[] { "carreiras_entrega01.sql", "002_usuarios.sql", "003_candidatura_pendente.sql" })
         {
             var sql = File.ReadAllText(Path.Combine(raizRepo, "db", arq)).Replace("USE RH_METISA;", $"USE {Nome};");
             foreach (var lote in Regex.Split(sql, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase))

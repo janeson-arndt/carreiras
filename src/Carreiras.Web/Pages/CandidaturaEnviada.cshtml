@@ -1,0 +1,36 @@
+@page "/candidatar/enviada"
+@model Carreiras.Web.Pages.CandidaturaEnviadaModel
+@{
+    ViewData["Title"] = "Falta um passo";
+}
+@section Head { <meta name="robots" content="noindex" /> }
+<div class="wrap passo">
+    <p class="selo-passo"><i class="bi bi-envelope-check" aria-hidden="true"></i> Falta um passo</p>
+    <h1>Confirme seu e-mail para concluir</h1>
+    @if (Model.EmailMascarado != null)
+    {
+        <p class="lead">Enviamos um link para <strong>@Model.EmailMascarado</strong>. Abra o e-mail e clique no link: <strong>sua candidatura só chega ao RH depois disso</strong>.</p>
+    }
+    else
+    {
+        <p class="lead">Enviamos um link para o e-mail informado. Abra a mensagem e clique no link: <strong>sua candidatura só chega ao RH depois disso</strong>.</p>
+    }
+    <ul class="dicas">
+        <li>O link vale por 24 horas e só pode ser usado uma vez.</li>
+        <li>Não achou a mensagem? Veja a caixa de spam.</li>
+    </ul>
+
+    @if (Model.Aviso != null)
+    {
+        <div class="alert @(Model.AvisoErro ? "alert-danger" : "alert-success")" role="status">@Model.Aviso</div>
+    }
+
+    @if (Model.EmailMascarado != null)
+    {
+        <form method="post" asp-page-handler="Reenviar">
+            <input type="hidden" name="R" value="@Model.R" />
+            <button type="submit" class="btn btn-sec">Pedir novo link</button>
+        </form>
+    }
+    <p class="mt-4"><a asp-page="/Vagas/Index">Ver outras vagas</a></p>
+</div>

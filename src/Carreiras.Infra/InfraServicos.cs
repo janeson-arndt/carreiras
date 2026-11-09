@@ -20,6 +20,13 @@ public static class InfraServicos
             .UseSqlServer(cs)
             .AddInterceptors(sp.GetRequiredService<AuditoriaInterceptor>()));
         services.AddDbContext<AuthDbContext>(o => o.UseSqlServer(cs));
+
+        services.Configure<Candidaturas.CurriculosOpcoes>(config.GetSection("Curriculos"));
+        services.Configure<Candidaturas.CandidaturaOpcoes>(config.GetSection("Candidatura"));
+        services.Configure<Candidaturas.RetencaoOpcoes>(config.GetSection("Retencao"));
+        services.AddSingleton<Candidaturas.ArmazenamentoCurriculos>();
+        services.AddScoped<Candidaturas.CandidaturaServico>();
+        services.AddScoped<Candidaturas.RetencaoServico>();
         return services;
     }
 }

@@ -17,6 +17,7 @@ Projeto de estudo próprio. Portal de carreiras de uma empresa de metalurgia, co
 | Arquivo | Para que serve |
 |---|---|
 | `carreiras_entrega01.sql` | **Fonte de verdade do banco** (26 tabelas, índices, regras, rotina de anonimização e seed). |
+| `003_candidatura_pendente.sql` | Script incremental da **Entrega 04**: colunas de candidatura pendente em `ConfirmacaoEmail` e a rotina `usp_ExpirarCandidaturasNaoConfirmadas`. Rode **depois** do 002 (pode ser reexecutado). |
 | `002_usuarios.sql` | Script incremental da **gestão de usuários do RH**: campos de controle e vínculo com o ASP.NET Identity. Rode **depois** do 001. |
 | `carreiras_analise.docx` | Análise completa: regras de negócio, fluxos, critérios de aceitação, riscos e glossário. |
 | `prototipo_vitrine_c.html` | Portal público (Entrega 03, e a entrada do formulário da 04 e do banco de talentos da 05). **Versão escolhida.** |
@@ -234,7 +235,7 @@ Fontes: **Exo 2** (títulos, pesos 600/700/800) e **Source Sans 3** (texto, 400/
 
 ## 13. Como rodar os testes (adicionado na Entrega 02)
 
-Os testes de integração usam SQL Server real e **recriam o banco `RH_METISA_TESTE`** a cada execução a partir de `db/001` e `db/002` (o `RH_METISA` de desenvolvimento nunca é tocado). Defina a conexão com permissão de criar banco (não grave em arquivo):
+Os testes de integração usam SQL Server real e **recriam o banco `RH_METISA_TESTE`** a cada execução a partir de `db/001`, `db/002` e `db/003` (o `RH_METISA` de desenvolvimento nunca é tocado). Defina a conexão com permissão de criar banco (não grave em arquivo):
 
 ```bash
 export CARREIRAS_TESTE_ADMIN_CS='Server=<instância>;User Id=<login com permissão>;Password=<senha>;TrustServerCertificate=True'
@@ -285,3 +286,29 @@ O portal é servido sob um prefixo configurável: `PathBase` (variável de ambie
 - O aviso "Ambiente de avaliação" e a nota sobre logo e fotos da Metisa dependem de `Vitrine:AvisoAvaliacao` em `appsettings.json`. **Desligar só depois de trocar imagens e logo por material liberado** (o briefing proíbe publicar com eles).
 - Os links das redes sociais vieram do protótipo e não foram conferidos no ar. O JSON-LD não passou pelo Teste de Resultados Enriquecidos do Google (precisa de URL pública).
 - Teclado conferido por estrutura (elementos nativos, link para pular o conteúdo, âncoras válidas); não houve teste manual com leitor de tela.
+
+## 16. Status da Entrega 04 (candidatura avulsa com confirmação por e-mail)
+
+**Rotas:** `/candidatar?vaga={slug}` (formulário), `/candidatar/enviada` ("Falta um passo"), `/confirmar/{token}` (link do e-mail) e `/termo-de-privacidade`. Vaga inexistente ou não publicada = 404. A candidatura espontânea (sem vaga) fica para a Entrega 05; o serviço já aceita `VagaId` nulo.
+
+**Fluxo:** o envio cria (ou reaproveita) o `Candidato` com `EmailConfirmado = 0`, guarda o currículo, grava o consentimento (versão do termo, data e IP) e gera um token de 256 bits; o banco guarda **só o hash SHA-256**. Os dados que esperam o clique (vaga, currículo, pretensão, perfil informado) ficam em colunas novas de `ConfirmacaoEmail` (db/003). A `Candidatura` (RECEBIDA + histórico) só nasce no clique; nesse momento o perfil informado passa a valer, a retenção é estendida em 12 meses e os dados pessoais pendentes são apagados da confirmação. Quando o candidato já existe, o perfil dele **não é sobrescrito** antes da confirmação.
+
+**Desvios deliberados:**
+- **GET no link só mostra a candidatura e um botão; quem efetiva é o POST.** Antivírus e prévias de e-mail abrem links sozinhos e gastariam o uso único.
+- Reenvio ("Pedir novo link") gera token novo e invalida o anterior (mensagem "link substituído"); intervalo mínimo de 60 s e no máximo 5 links por hora por candidato.
+- `ArquivoCurriculo` confere o tipo real: `%PDF-` no início do PDF; DOCX precisa ser ZIP com `[Content_Types].xml` e `word/document.xml`. Nome gravado em disco = guid + extensão; o nome original só serve de rótulo para o RH.
+
+**Segurança:** currículos em `Curriculos:Pasta` (padrão `storage/curriculos`, ignorado pelo git, **fora do wwwroot**; nada é servido por URL; o RH autenticado abrirá pelo `ArmazenamentoCurriculos.Abrir` na Entrega 06); antifalsificação do Razor Pages em todos os POST; limite de tentativas por IP (`RateLimit:Tentativas`/`JanelaMinutos`, padrão 10 em 10 min, resposta 429); captcha de soma assinado com DataProtection (validade de 1 h) mais campo-isca; o log não traz e-mail, nome nem token. O link do e-mail usa `Site:Origem` quando configurado (**configure em produção**, para não montar o link a partir do cabeçalho Host).
+
+**Retenção:** `RetencaoServico` roda `usp_ExpirarCandidaturasNaoConfirmadas` (descarta pendências sem confirmação após 7 dias), `usp_AnonimizarCandidatosExpirados` e apaga do disco os arquivos de `Curriculo.RemovidoEm`. O job diário (`RetencaoDiaria`) fica **desligado por padrão** (`Retencao:Habilitado`); o perfil `http` do launchSettings liga. Em produção, ligar a configuração ou agendar a execução.
+
+**Atendido, com teste (61 novos; suíte em 298):** todos os critérios da Entrega 04 (campos obrigatórios, aceite do termo, PDF/DOCX até 5 MB com tipo real, só vale após o clique, link vencido e de uso único inclusive com cliques simultâneos, duplicidade por e-mail+vaga com mensagem, consentimento com versão/data/IP, captcha e isca, 429, antifalsificação, vaga encerrada entre envio e clique, limpeza de não confirmados e do arquivo, verificação de estrutura e axe-core em desktop e 375 px). Verificado também no navegador, do envio ao clique, com o e-mail gravado em `storage/emails`.
+
+**Exceção conhecida:** botão primário branco sobre `#019641` (3,86:1), a mesma das entregas anteriores.
+
+**Pendências deliberadas:**
+- **Texto do termo de privacidade é um texto-base sem revisão jurídica** (aviso na própria página até `Privacidade:RevisadoPeloJuridico = true`); e-mail do encarregado fictício (`Privacidade:EmailEncarregado`, padrão `dpo@exemplo.local`). Mudou o texto, mude `TermoPrivacidade.VersaoAtual`.
+- Atrás de proxy reverso, configurar cabeçalhos encaminhados: o limite de tentativas e o IP do consentimento usam o endereço da conexão.
+- Antes de HTTPS e produção: SMTP real (hoje o e-mail vai para arquivo), `Cookie.SecurePolicy = Always`, `Site:Origem`.
+- Currículo só é aberto pelo RH na Entrega 06; banco de talentos, "Meus dados" e candidatura espontânea são da Entrega 05.
+

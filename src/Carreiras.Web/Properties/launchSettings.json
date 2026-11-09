@@ -9,7 +9,8 @@
       "applicationUrl": "http://localhost:5129",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "PathBase": "/rhmetisa"
+        "PathBase": "/rhmetisa",
+        "Retencao__Habilitado": "true"
       }
     },
     "https": {

@@ -1,0 +1,70 @@
+@page "/confirmar/{token}"
+@model Carreiras.Web.Pages.ConfirmarModel
+@using Carreiras.Infra.Candidaturas
+@{
+    var e = Model.Estado;
+    ViewData["Title"] = Model.Concluida ? "Candidatura confirmada" : "Confirmar candidatura";
+}
+@section Head { <meta name="robots" content="noindex" /><meta name="referrer" content="no-referrer" /> }
+<div class="wrap passo">
+    @if (Model.Aviso != null)
+    {
+        <div class="alert @(Model.AvisoErro ? "alert-danger" : "alert-success")" role="status">@Model.Aviso</div>
+    }
+
+    @if (Model.Concluida)
+    {
+        <p class="selo-passo selo-ok"><i class="bi bi-check-circle" aria-hidden="true"></i> Pronto</p>
+        <h1>Candidatura confirmada</h1>
+        <p class="lead">Recebemos sua candidatura para <strong>@e.VagaTitulo</strong>. O RH vai analisar seu currículo e entrar em contato se seguir com o processo.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver outras vagas</a></p>
+    }
+    else if (e.Status == StatusConfirmacao.Ok)
+    {
+        <p class="selo-passo"><i class="bi bi-envelope-check" aria-hidden="true"></i> Último passo</p>
+        <h1>Confirmar candidatura</h1>
+        <p class="lead">Vaga: <strong>@e.VagaTitulo</strong><br />E-mail: <strong>@e.EmailMascarado</strong></p>
+        <p>Clique no botão para enviar sua candidatura ao RH.</p>
+        <form method="post">
+            <button type="submit" class="btn btn-primary">Confirmar minha candidatura</button>
+        </form>
+    }
+    else if (e.Status == StatusConfirmacao.Expirado)
+    {
+        <h1>Este link venceu</h1>
+        <p class="lead">O link de confirmação vale por 24 horas. Peça um novo e a candidatura continua de onde parou, sem precisar enviar o currículo de novo.</p>
+        <form method="post" asp-page-handler="NovoLink">
+            <button type="submit" class="btn btn-primary">Pedir novo link</button>
+        </form>
+    }
+    else if (e.Status == StatusConfirmacao.Usado)
+    {
+        <h1>Este link já foi usado</h1>
+        <p class="lead">Se foi você quem clicou, sua candidatura já está com o RH. Se ainda não recebeu retorno, aguarde: a análise leva alguns dias.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else if (e.Status == StatusConfirmacao.Substituido)
+    {
+        <h1>Este link foi substituído</h1>
+        <p class="lead">Você pediu um link mais novo, e só o último e-mail vale. Abra a mensagem mais recente e clique no link dela.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else if (e.Status == StatusConfirmacao.JaCandidatou)
+    {
+        <h1>Você já se candidatou a esta vaga</h1>
+        <p class="lead">Encontramos uma candidatura sua para <strong>@e.VagaTitulo</strong>, então não criamos outra.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else if (e.Status == StatusConfirmacao.VagaIndisponivel)
+    {
+        <h1>Esta vaga não está mais aberta</h1>
+        <p class="lead">A vaga foi encerrada ou pausada antes da confirmação, então a candidatura não foi enviada.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+    else
+    {
+        <h1>Link inválido</h1>
+        <p class="lead">Não encontramos este link. Confira se copiou o endereço inteiro do e-mail ou faça a candidatura de novo.</p>
+        <p><a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+    }
+</div>

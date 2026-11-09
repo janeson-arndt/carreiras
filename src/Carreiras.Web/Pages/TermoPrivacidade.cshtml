@@ -1,0 +1,56 @@
+@page "/termo-de-privacidade"
+@model Carreiras.Web.Pages.TermoPrivacidadeModel
+@{
+    ViewData["Title"] = "Termo de privacidade";
+    ViewData["Descricao"] = "Como a Metisa trata os dados de quem se candidata a uma vaga: o que coletamos, para quê, por quanto tempo e como exercer seus direitos.";
+}
+<div class="wrap termo">
+    <h1>Termo de privacidade do candidato</h1>
+    <p class="versao-termo">Versão @Model.Versao</p>
+
+    @if (!Model.RevisadoPeloJuridico)
+    {
+        <div class="alert alert-warning" role="note">
+            <strong>Texto-base, ainda sem revisão jurídica.</strong> Este termo foi redigido a partir da LGPD (Lei 13.709/2018) e das regras do portal.
+            A Metisa precisa revisá-lo e confirmar os dados do encarregado antes da publicação oficial.
+        </div>
+    }
+
+    <h2>1. Quem é responsável pelos seus dados</h2>
+    <p>A Metalúrgica Timboense S.A. (Metisa) é a controladora dos dados pessoais tratados neste Portal de Carreiras.</p>
+
+    <h2>2. Quais dados coletamos</h2>
+    <ul>
+        <li>Nome, e-mail, telefone, cidade e estado.</li>
+        <li>Seu currículo (arquivo PDF ou DOCX), com tudo o que você escolheu colocar nele.</li>
+        <li>Pretensão salarial, se você informar. É opcional e só o RH vê.</li>
+        <li>Registro do seu aceite: versão deste termo, data, hora e endereço IP.</li>
+    </ul>
+    <p>Não pedimos dados sensíveis, como saúde, religião ou orientação política. Se você os colocar no currículo, eles serão tratados com o mesmo cuidado, mas recomendamos não incluí-los.</p>
+
+    <h2>3. Para que usamos</h2>
+    <p>Usamos os dados para avaliar sua candidatura, entrar em contato sobre processos seletivos e, se você escolher, mantê-lo no banco de talentos para vagas futuras. Não usamos seus dados para propaganda nem os vendemos.</p>
+
+    <h2>4. Base legal</h2>
+    <p>O tratamento se baseia no seu consentimento (art. 7º, I, da LGPD), dado quando você marca o aceite deste termo, e nos procedimentos preliminares a uma possível contratação (art. 7º, V).</p>
+
+    <h2>5. Quem acessa</h2>
+    <p>Somente pessoas autorizadas do RH da Metisa, com login próprio. Seu currículo não fica em endereço público. Podemos compartilhar dados com prestadores que nos ajudam a operar o portal (hospedagem e envio de e-mail), sob contrato e com o dever de proteger as informações.</p>
+
+    <h2>6. Por quanto tempo guardamos</h2>
+    <p>Guardamos seus dados por até 12 meses a partir da sua última candidatura ou atualização. Depois disso, eles são anonimizados e o arquivo do currículo é apagado. Candidaturas que você não confirmar pelo e-mail são descartadas em poucos dias.</p>
+
+    <h2>7. Seus direitos</h2>
+    <p>Você pode, a qualquer momento, pedir confirmação de que tratamos seus dados, acesso, correção, anonimização, exclusão, portabilidade, informação sobre compartilhamento e a revogação do consentimento (art. 18 da LGPD). Escreva para o encarregado de dados.</p>
+
+    <h2>8. Segurança</h2>
+    <p>Usamos confirmação do e-mail, acesso restrito por perfil, arquivos guardados fora das páginas públicas e registro das ações do RH sobre os dados.</p>
+
+    <h2>9. Encarregado de dados</h2>
+    <p>Para exercer seus direitos ou tirar dúvidas: <a href="mailto:@Model.EmailEncarregado">@Model.EmailEncarregado</a>.</p>
+
+    <h2>10. Mudanças neste termo</h2>
+    <p>Quando o texto mudar, a versão muda. Registramos qual versão você aceitou em cada candidatura.</p>
+
+    <p class="mt-4"><a class="btn btn-sec" asp-page="/Vagas/Index">Ver vagas abertas</a></p>
+</div>
