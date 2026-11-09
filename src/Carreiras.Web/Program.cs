@@ -75,6 +75,22 @@ if (args.Length > 0 && args[0] == "criar-admin")
     return await CriarAdministrador.ExecutarAsync(app.Services, app.Configuration, args);
 }
 
+// Prefixo do site (ex.: PathBase=/rhmetisa serve tudo em http://localhost:5129/rhmetisa/...). Vazio = na raiz.
+// Todos os links e redirecionamentos usam os helpers do ASP.NET, que já incluem o prefixo.
+var pathBase = app.Configuration["PathBase"]?.Trim().TrimEnd('/');
+if (!string.IsNullOrEmpty(pathBase))
+{
+    pathBase = pathBase.StartsWith('/') ? pathBase : "/" + pathBase;
+    app.UsePathBase(pathBase);
+    // Só o prefixo vale: "/" leva ao portal e qualquer outro caminho sem o prefixo é 404 (UsePathBase sozinho deixa passar).
+    app.Use(async (ctx, next) =>
+    {
+        if (ctx.Request.PathBase.HasValue) { await next(); return; }
+        if (ctx.Request.Path == "/") { ctx.Response.Redirect(pathBase + "/admin"); return; }
+        ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+    });
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

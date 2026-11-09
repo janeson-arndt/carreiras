@@ -61,6 +61,6 @@ public class EntrarModel : PageModel
 
         usuario.UltimoAcessoEm = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/admin");
+        return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : Url.Content("~/admin"));
     }
 }

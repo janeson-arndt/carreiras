@@ -261,3 +261,7 @@ dotnet test tests/Carreiras.Testes
 - `Vaga` não tem coluna `Ficticio`: as vagas de exemplo do seed não ganham a etiqueta "exemplo" (decidir se vale uma migração).
 - Antes de publicar em HTTPS: `Cookie.SecurePolicy` está `SameAsRequest`; trocar para `Always`. O SMTP real ainda não foi configurado (em desenvolvimento o e-mail vai para `storage/emails`).
 - Decisão nº 8 do briefing fechada: os 13 ícones do seed existem no Bootstrap Icons 1.11.3.
+
+### Endereço do portal (PathBase)
+
+O portal é servido sob um prefixo configurável: `PathBase` (variável de ambiente ou configuração). O perfil `http` do `launchSettings.json` já define `PathBase=/rhmetisa`, então `dotnet run --project src/Carreiras.Web --launch-profile http` serve em **http://localhost:5129/rhmetisa/admin**. Com o prefixo ligado, **só** ele vale: `/` redireciona para o portal e qualquer outro caminho sem o prefixo dá 404. Sem `PathBase` (como nos testes), o portal fica na raiz. Nunca escreva caminho fixo em código novo: use `asp-page`, `Url.Page`, `Url.Content("~/...")` e `RedirectToPage`, que já incluem o prefixo (coberto por `PathBaseTestes`).
