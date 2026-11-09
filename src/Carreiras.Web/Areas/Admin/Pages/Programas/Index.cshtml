@@ -23,17 +23,17 @@ else
 {
 <div class="cartao">
     <div class="table-responsive" style="overflow: visible">
-    <table class="table align-middle mb-0">
+    <table class="table align-middle mb-0 tabela-cartoes" role="table">
         <caption class="visually-hidden">Programas</caption>
-        <thead><tr><th scope="col">Programa</th><th scope="col">Público-alvo</th><th scope="col">Situação</th><th scope="col" class="text-end">Ações</th></tr></thead>
+        <thead><tr role="row"><th role="columnheader" scope="col">Programa</th><th role="columnheader" scope="col">Público-alvo</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col" class="text-end">Ações</th></tr></thead>
         <tbody>
         @foreach (var p in Model.Itens)
         {
-            <tr>
-                <td><strong>@p.Nome</strong>@if (p.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@p.Descricao</small></td>
-                <td>@p.PublicoAlvo</td>
-                <td><span class="etiqueta @(p.Ativo ? "" : "inativo")">@(p.Ativo ? "Ativo" : "Desativado")</span></td>
-                <td class="text-end text-nowrap">
+            <tr role="row">
+                <td role="cell"><strong>@p.Nome</strong>@if (p.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@p.Descricao</small></td>
+                <td role="cell" data-rotulo="Público-alvo">@p.PublicoAlvo</td>
+                <td role="cell" data-rotulo="Situação"><span class="etiqueta @(p.Ativo ? "" : "inativo")">@(p.Ativo ? "Ativo" : "Desativado")</span></td>
+                <td role="cell" class="text-end text-nowrap">
                     <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@p.Id">@(Model.PodeEditar ? "Editar" : "Ver")</a>
                     @if (Model.PodeEditar)
                     {

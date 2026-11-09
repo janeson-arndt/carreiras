@@ -241,3 +241,10 @@ dotnet test tests/Carreiras.Testes
 - `sqlcmd` precisa de `-I` (QUOTED_IDENTIFIER ligado) para rodar os scripts 001/002 por linha de comando; o SSMS já liga.
 - `dotnet ef` usa a variável `CARREIRAS_MIGRATION_CS` (conexão com DDL) via `IDesignTimeDbContextFactory`; há dois contextos: `AppDbContext` (negócio, migração inicial vazia) e `AuthDbContext` (Identity).
 - Primeiro administrador / recuperação: `dotnet user-secrets set "Admin:Senha" "<senha>" --project src/Carreiras.Web` e `ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Carreiras.Web -- criar-admin "Nome" email@exemplo.com`.
+
+### Acessibilidade (adicionado na Entrega 02)
+
+- `tests/Carreiras.Testes/Acessibilidade/`: `ContrasteTestes` (razão de contraste calculada do `carreiras.css`, 4,5:1 texto e 3:1 bordas), `EstruturaTestes` (21 telas do RH: idioma, título, h1 único, rótulos, tabelas com legenda e `scope`, ARIA válido, menus disclosure, avisos, áreas roláveis com teclado) e `VerificadorTestes` (controles negativos: HTML com defeito tem de ser reprovado).
+- O que depende de layout (contraste real, reflow no celular) foi conferido com **axe-core 4.10** no navegador, em 375 px e em desktop, com zero violações. Para repetir: `npm i axe-core` fora do repositório, copiar `axe.min.js` para um `wwwroot/lib/axe-temp/` temporário (a CSP só aceita scripts do próprio site), injetar com `<script src>` e rodar `axe.run()`; **remover a pasta antes do commit**.
+- Os únicos itens "incompletos" do axe são `<select>`/`<textarea>` (seta do Bootstrap é imagem de fundo); o texto é `#232323` sobre branco (16:1).
+- Listas do RH viram cartões empilhados abaixo de 768 px (`.tabela-cartoes` + `data-rotulo`, com papéis ARIA para manter a semântica de tabela). A Auditoria mantém tabela rolável, com `tabindex="0"`, `role="region"` e `aria-label`.

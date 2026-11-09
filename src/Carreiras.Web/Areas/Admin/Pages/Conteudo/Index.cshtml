@@ -25,18 +25,18 @@ else
 {
 <div class="cartao">
     <div class="table-responsive" style="overflow: visible">
-    <table class="table align-middle mb-0">
+    <table class="table align-middle mb-0 tabela-cartoes" role="table">
         <caption class="visually-hidden">Conteúdos institucionais</caption>
-        <thead><tr><th scope="col">Conteúdo</th><th scope="col">Seção</th><th scope="col">Ordem</th><th scope="col">Situação</th><th scope="col" class="text-end">Ações</th></tr></thead>
+        <thead><tr role="row"><th role="columnheader" scope="col">Conteúdo</th><th role="columnheader" scope="col">Seção</th><th role="columnheader" scope="col">Ordem</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col" class="text-end">Ações</th></tr></thead>
         <tbody>
         @foreach (var c in Model.Itens)
         {
-            <tr>
-                <td><strong>@c.Titulo</strong>@if (c.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@Resumo(c.Texto)</small></td>
-                <td><code>@c.Secao</code></td>
-                <td>@c.Ordem</td>
-                <td><span class="etiqueta @(c.Publicado ? "" : "inativo")">@(c.Publicado ? "Publicado" : "Despublicado")</span></td>
-                <td class="text-end text-nowrap">
+            <tr role="row">
+                <td role="cell"><strong>@c.Titulo</strong>@if (c.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@Resumo(c.Texto)</small></td>
+                <td role="cell" data-rotulo="Seção"><code>@c.Secao</code></td>
+                <td role="cell" data-rotulo="Ordem">@c.Ordem</td>
+                <td role="cell" data-rotulo="Situação"><span class="etiqueta @(c.Publicado ? "" : "inativo")">@(c.Publicado ? "Publicado" : "Despublicado")</span></td>
+                <td role="cell" class="text-end text-nowrap">
                     <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@c.Id">@(Model.PodeEditar ? "Editar" : "Ver")</a>
                     @if (Model.PodeEditar)
                     {

@@ -82,4 +82,15 @@ h1, h2, h3, h4, h5, .titulo { font-family: "Exo 2", "Source Sans 3", system-ui, 
   .admin-menu { border-right: 0; border-bottom: 1px solid #d4d4d4; display: flex; flex-wrap: wrap; gap: .25rem; padding: .5rem; }
   .admin-menu .grupo { display: none; }
 }
+/* Listas viram cartões empilhados no celular (reflow, WCAG 1.4.10): sem rolagem horizontal da página.
+   A semântica de tabela é mantida com os papéis ARIA que estão no HTML. */
+@media (max-width: 767px) {
+  .tabela-cartoes thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .tabela-cartoes, .tabela-cartoes tbody, .tabela-cartoes tr, .tabela-cartoes td { display: block; width: 100%; }
+  .tabela-cartoes tr { padding: .75rem 1rem; border-bottom: 1px solid #d4d4d4; }
+  .tabela-cartoes td { padding: .2rem 0; border: 0; background: transparent; box-shadow: none; overflow-wrap: anywhere; }
+  .tabela-cartoes td[data-rotulo]::before { content: attr(data-rotulo) ": "; font-weight: 600; color: var(--c-cinza-texto); }
+  .tabela-cartoes td:last-child { text-align: left !important; white-space: normal !important; padding-top: .6rem; }
+  .acoes-lista { right: auto; left: 0; min-width: min(17rem, 80vw); }
+}
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
