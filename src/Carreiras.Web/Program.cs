@@ -17,6 +17,7 @@ builder.Services.AddScoped<Carreiras.Infra.Vagas.VagaServico>();
 builder.Services.AddScoped<Carreiras.Infra.Cadastros.CadastroServico>();
 builder.Services.AddScoped<Carreiras.Infra.Cadastros.ConteudoServico>();
 builder.Services.AddScoped<Carreiras.Infra.Auditoria.AuditoriaConsulta>();
+builder.Services.AddScoped<Carreiras.Infra.Vitrine.VitrineServico>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioAuditoria, UsuarioAuditoriaHttp>();
 
@@ -88,7 +89,7 @@ if (!string.IsNullOrEmpty(pathBase))
     app.Use(async (ctx, next) =>
     {
         if (ctx.Request.PathBase.HasValue) { await next(); return; }
-        if (ctx.Request.Path == "/") { ctx.Response.Redirect(pathBase + "/admin"); return; }
+        if (ctx.Request.Path == "/") { ctx.Response.Redirect(pathBase + "/"); return; }
         ctx.Response.StatusCode = StatusCodes.Status404NotFound;
     });
 }

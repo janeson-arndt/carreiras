@@ -1,0 +1,76 @@
+@model Carreiras.Web.Vitrine.ListagemVagas
+@using Carreiras.Infra.Vitrine
+@{
+    var f = Model.Filtro;
+    var n = Model.Vagas.Count;
+    // Um grupo de botões = um formulário GET: clicar marca ou desmarca a opção e mantém os outros filtros.
+}
+<details class="filtros" id="filtros" open@(f.Ativo ? " data-ativo" : "")>
+    <summary>Filtrar vagas</summary>
+    <div class="corpo">
+        @foreach (var grupo in new[]
+        {
+            (Chave: "unidade", Titulo: "Unidade", Opcoes: Model.Opcoes.Unidades, Atual: f.UnidadeId),
+            (Chave: "turno", Titulo: "Turno", Opcoes: Model.Opcoes.Turnos, Atual: f.TurnoId),
+            (Chave: "contrato", Titulo: "Tipo de contrato", Opcoes: Model.Opcoes.Contratos, Atual: f.TipoContratoId),
+        })
+        {
+            <div class="grupo">
+                <span class="g-tit" id="g-@grupo.Chave">@grupo.Titulo</span>
+                <form method="get" asp-page="@Model.Pagina" asp-fragment="vagas">
+                    @foreach (var o in Model.Outros(grupo.Chave)) { <input type="hidden" name="@o.Key" value="@o.Value" /> }
+                    <div class="pills" role="group" aria-labelledby="g-@grupo.Chave">
+                    @foreach (var o in grupo.Opcoes)
+                    {
+                        var marcado = grupo.Atual == o.Id;
+                        <button type="submit" class="pill" name="@grupo.Chave" value="@(marcado ? "" : o.Id.ToString())" aria-pressed="@(marcado ? "true" : "false")">@o.Rotulo <small>(@o.Quantidade)</small></button>
+                    }
+                    </div>
+                </form>
+            </div>
+        }
+        <div class="grupo">
+            <form method="get" asp-page="@Model.Pagina" asp-fragment="vagas">
+                @foreach (var o in Model.Outros("area")) { <input type="hidden" name="@o.Key" value="@o.Value" /> }
+                <label for="f-area">Área</label>
+                <select class="form-select" id="f-area" name="area" data-auto-envia>
+                    <option value="">Todas as áreas</option>
+                    @foreach (var a in Model.Opcoes.Areas)
+                    {
+                        <option value="@a.Id" selected="@(f.AreaId == a.Id)">@a.Rotulo</option>
+                    }
+                </select>
+                <noscript><button type="submit" class="btn btn-sec" style="margin-top: 8px">Aplicar área</button></noscript>
+            </form>
+        </div>
+        <div class="grupo">
+            <a class="btn btn-sec" style="width: 100%; padding: 8px 14px" asp-page="@Model.Pagina" asp-fragment="vagas">Limpar filtros</a>
+        </div>
+    </div>
+</details>
+<div>
+    <h2 class="visually-hidden">Vagas encontradas</h2>
+    <p id="contagem" aria-live="polite">@(n == 1 ? "1 vaga encontrada" : $"{n} vagas encontradas")</p>
+    @if (n > 0)
+    {
+        @foreach (var v in Model.Vagas)
+        {
+            <a class="vaga" asp-page="/Vagas/Detalhe" asp-route-slug="@v.Slug">
+                <div>
+                    <h3>@v.Titulo</h3>
+                    <div class="meta"><span>@v.Cidade (@v.Uf)</span><span>@v.Turno</span><span>@v.Contrato</span><span>@v.Area</span></div>
+                </div>
+                <span class="ver">Ver vaga</span>
+            </a>
+        }
+    }
+    else
+    {
+        <div class="vazio-lista">
+            <p>@(f.Ativo
+                ? "Nenhuma vaga aberta com esses filtros agora. Tire um filtro ou deixe seu currículo no banco de talentos: avisamos quando surgir uma vaga para o seu perfil."
+                : "Nenhuma vaga aberta no momento. Deixe seu currículo no banco de talentos: avisamos quando surgir uma vaga para o seu perfil.")</p>
+            <a class="btn btn-primary" asp-page="/BancoDeTalentos">Entrar no banco de talentos</a>
+        </div>
+    }
+</div>

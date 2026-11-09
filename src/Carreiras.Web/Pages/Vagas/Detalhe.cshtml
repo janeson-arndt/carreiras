@@ -1,0 +1,89 @@
+@page "/vagas/{slug}"
+@model Carreiras.Web.Pages.Vagas.DetalheModel
+@using Carreiras.Web.Pages.Vagas
+@{
+    var v = Model.Vaga;
+    ViewData["Title"] = v == null ? "Vaga não encontrada" : v.Titulo;
+    ViewData["EmVaga"] = v != null;
+    if (v != null) { ViewData["Descricao"] = $"{v.Titulo} na Metisa, em {v.UnidadeCidade} ({v.UnidadeUf}). {v.Turno}, {v.Contrato}."; }
+}
+@section Head {
+    @if (Model.JsonLd != null)
+    {
+        <script type="application/ld+json">@Html.Raw(Model.JsonLd)</script>
+    }
+    @if (v == null) { <meta name="robots" content="noindex" /> }
+}
+
+@if (v == null)
+{
+    <div class="wrap nao-encontrada">
+        <h1>Vaga não encontrada</h1>
+        <p>Esta vaga não existe ou já foi encerrada. <a asp-page="/Vagas/Index">Veja as vagas abertas.</a></p>
+    </div>
+}
+else
+{
+    var obrigatorios = v.Requisitos.Where(r => r.Obrigatorio).ToList();
+    var desejaveis = v.Requisitos.Where(r => !r.Obrigatorio).ToList();
+    <div class="faixa">
+        <div class="wrap">
+            <a asp-page="/Vagas/Index">Voltar para as vagas</a>
+            <h1>@v.Titulo</h1>
+            <div class="meta">
+                <span>@v.UnidadeCidade (@v.UnidadeUf)</span><span>@v.Turno</span><span>@v.Contrato</span><span>@v.Modalidade</span>
+                @if (!string.IsNullOrEmpty(v.Programa)) { <span>@v.Programa</span> }
+            </div>
+        </div>
+    </div>
+    <div class="wrap det">
+        <article class="corpo-vaga">
+            <h2>Sobre a vaga</h2>
+            <p class="descricao">@v.Descricao</p>
+            @if (v.Atividades.Count > 0)
+            {
+                <h2>O que você vai fazer</h2>
+                <ul>@foreach (var a in v.Atividades) { <li>@a</li> }</ul>
+            }
+            @if (obrigatorios.Count > 0)
+            {
+                <h2>O que pedimos</h2>
+                <ul>@foreach (var r in obrigatorios) { <li>@r.Texto</li> }</ul>
+            }
+            @if (desejaveis.Count > 0)
+            {
+                <h2>Seria bom ter</h2>
+                <ul>@foreach (var r in desejaveis) { <li>@r.Texto</li> }</ul>
+            }
+            @if (v.Diferenciais.Count > 0)
+            {
+                <h2>Diferenciais</h2>
+                <ul>@foreach (var d in v.Diferenciais) { <li>@d</li> }</ul>
+            }
+            @if (v.Beneficios.Count > 0)
+            {
+                <h2>Benefícios desta vaga</h2>
+                <div class="chips">@foreach (var b in v.Beneficios) { <span>@b</span> }</div>
+            }
+        </article>
+        <aside class="lateral-vaga" aria-label="Resumo da vaga">
+            <dl>
+                <dt>Unidade</dt><dd>@v.UnidadeNome</dd>
+                <dt>Endereço</dt><dd>@v.UnidadeEndereco@(string.IsNullOrWhiteSpace(v.UnidadeBairro) ? "" : ", " + v.UnidadeBairro)</dd>
+                <dt>Turno</dt><dd>@v.Turno</dd>
+                @if (v.SalarioMin.HasValue && v.SalarioMax.HasValue)
+                {
+                    <dt>Faixa salarial</dt><dd>@DetalheModel.Dinheiro(v.SalarioMin.Value) a @DetalheModel.Dinheiro(v.SalarioMax.Value)</dd>
+                }
+            </dl>
+            <a class="btn btn-primary" asp-page="/Candidatar" asp-route-vaga="@v.Slug">Candidatar-se a esta vaga</a>
+        </aside>
+    </div>
+}
+
+@section Barra {
+    @if (v != null)
+    {
+        <aside class="barra-candidatar" aria-label="Candidatura"><a class="btn btn-primary" asp-page="/Candidatar" asp-route-vaga="@v.Slug">Candidatar-se a esta vaga</a></aside>
+    }
+}

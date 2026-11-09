@@ -57,7 +57,15 @@ public class PathBaseTestes
             Assert.Equal(HttpStatusCode.NotFound, (await c.GetAsync("/css/carreiras.css")).StatusCode);
             var raiz = await c.GetAsync("/");
             Assert.Equal(HttpStatusCode.Redirect, raiz.StatusCode);
-            Assert.Equal($"{Base}/admin", raiz.Headers.Location!.OriginalString);
+            Assert.Equal($"{Base}/", raiz.Headers.Location!.OriginalString);   // a raiz leva à vitrine, sob o prefixo
+
+            // a vitrine pública também vive sob o prefixo, com links e imagens dentro dele
+            var vitrine = await c.GetAsync($"{Base}/");
+            Assert.Equal(HttpStatusCode.OK, vitrine.StatusCode);
+            var vh = await vitrine.Content.ReadAsStringAsync();
+            Assert.Contains($"href=\"{Base}/vagas\"", vh);
+            Assert.DoesNotMatch(@"(href|src|action)=""/(?!rhmetisa)[a-z]", vh);
+            Assert.Equal(HttpStatusCode.OK, (await c.GetAsync($"{Base}/img/vitrine/vista-aerea.jpg")).StatusCode);
 
             // login: volta para dentro do prefixo e o cookie vale só para ele
             var email = $"base-{Guid.NewGuid():N}@teste.local";

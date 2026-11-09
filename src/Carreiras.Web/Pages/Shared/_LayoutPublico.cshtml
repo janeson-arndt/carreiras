@@ -1,0 +1,58 @@
+@inject IConfiguration Configuracao
+@{
+    var aviso = Configuracao.GetValue<bool>("Vitrine:AvisoAvaliacao");
+    var emVaga = ViewData["EmVaga"] is true;
+    var titulo = ViewData["Title"] as string;
+    var descricao = ViewData["Descricao"] as string ?? "Veja as vagas abertas na Metisa (Metalúrgica Timboense) em Timbó, Recife e Canoas e candidate-se pelo celular.";
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(string.IsNullOrEmpty(titulo) ? "Carreiras" : titulo + " | Carreiras")</title>
+    <meta name="description" content="@descricao" />
+    <link rel="icon" type="image/png" href="~/img/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/carreiras.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/vitrine.css" asp-append-version="true" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body class="vitrine@(emVaga ? " em-vaga" : "")">
+<a class="visually-hidden-focusable" href="#conteudo">Ir para o conteúdo</a>
+<header class="topo">
+    @if (aviso)
+    {
+        <div class="aviso"><div class="wrap"><strong>Ambiente de avaliação.</strong> Vagas, benefícios, programas e os textos marcados como exemplo são conteúdo de exemplo.</div></div>
+    }
+    <div class="wrap topo-linha">
+        <a class="marca" asp-page="/Index">
+            <img src="~/img/logo.png" alt="Metisa, Metalúrgica Timboense S.A." width="80" height="56" />
+            <span class="divisor" aria-hidden="true"></span>
+            <span class="rotulo">Carreiras</span>
+        </a>
+        <nav aria-label="Principal">
+            <ul>
+                <li><a asp-page="/Vagas/Index">Vagas</a></li>
+                <li><a asp-page="/Index" asp-fragment="sobre">Nossa história</a></li>
+                <li><a asp-page="/Index" asp-fragment="beneficios">Benefícios</a></li>
+                <li><a asp-page="/Index" asp-fragment="programas">Programas</a></li>
+                <li><a asp-page="/Index" asp-fragment="privacidade">Privacidade</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="conteudo">
+    @RenderBody()
+</main>
+
+@await Component.InvokeAsync("Rodape", new { aviso })
+
+@await RenderSectionAsync("Barra", required: false)
+<script src="~/js/vitrine.js" asp-append-version="true"></script>
+</body>
+</html>

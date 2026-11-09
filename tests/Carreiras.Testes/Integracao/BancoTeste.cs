@@ -70,6 +70,7 @@ public sealed class BancoTeste : IAsyncLifetime
         services.AddScoped<Carreiras.Infra.Cadastros.CadastroServico>();
         services.AddScoped<Carreiras.Infra.Cadastros.ConteudoServico>();
         services.AddScoped<Carreiras.Infra.Auditoria.AuditoriaConsulta>();
+        services.AddScoped<Carreiras.Infra.Vitrine.VitrineServico>();
         _raiz = services.BuildServiceProvider();
 
         using var s = _raiz.CreateScope();
@@ -109,6 +110,16 @@ public sealed class BancoTeste : IAsyncLifetime
         await using var c = new SqlConnection(conexao);
         await c.OpenAsync();
         await using var cmd = new SqlCommand(sql, c) { CommandTimeout = 120 };
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>Executa SQL com parâmetros (para dados com aspas, tags e acentos).</summary>
+    public async Task ExecutarAsync(string sql, params (string Nome, object? Valor)[] parametros)
+    {
+        await using var c = new SqlConnection(ConexaoAdmin);
+        await c.OpenAsync();
+        await using var cmd = new SqlCommand(sql, c);
+        foreach (var (nome, valor) in parametros) cmd.Parameters.AddWithValue(nome, valor ?? DBNull.Value);
         await cmd.ExecuteNonQueryAsync();
     }
 

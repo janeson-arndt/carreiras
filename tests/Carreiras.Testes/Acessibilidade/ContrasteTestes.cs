@@ -110,6 +110,48 @@ public class ContrasteTestes
         Assert.DoesNotMatch(@"(?<![-a-z])color:\s*#019641", Css);
     }
 
+    /// <summary>
+    /// Guarda da vitrine (Entrega 03): o verde da marca (3,86:1 sobre branco) só pode ser cor de TEXTO em tamanho grande
+    /// (24px ou mais, ou 18,66px ou mais em negrito, a definição de texto grande do WCAG) e texto branco nunca vai sobre ele
+    /// (para isso existe o verde de hover). Mexer no CSS sem respeitar isso quebra este teste.
+    /// </summary>
+    [Fact]
+    public void Vitrine_usa_o_verde_da_marca_como_texto_so_em_tamanho_grande_e_branco_so_sobre_o_verde_escuro()
+    {
+        var css = File.ReadAllText(Caminho("src/Carreiras.Web/wwwroot/css/vitrine.css"));
+        var checadas = 0;
+        foreach (Match m in Regex.Matches(css, @"([^{}]+)\{([^}]*)\}"))
+        {
+            var seletor = m.Groups[1].Value.Trim();
+            var corpo = m.Groups[2].Value;
+
+            // texto branco só sobre o verde de hover, nunca sobre o verde da marca
+            if (Regex.IsMatch(corpo, @"(?<![-a-z])color:\s*#FFFFFF") && Regex.IsMatch(corpo, @"background(-color)?:\s*var\(--c-verde\)"))
+                Assert.Fail($"{seletor}: texto branco sobre o verde da marca ({Razao("#FFFFFF", Token("c-verde")):F2}:1). Use var(--c-verde-hover).");
+
+            if (!Regex.IsMatch(corpo, @"(?<![-a-z])color:\s*var\(--c-verde\)")) continue;
+            checadas++;
+            double? px = null; var peso = 400;
+            var atalho = Regex.Match(corpo, @"font:\s*(\d{3})\s+(\d+(?:\.\d+)?)px");
+            if (atalho.Success)
+            {
+                peso = int.Parse(atalho.Groups[1].Value);
+                px = double.Parse(atalho.Groups[2].Value, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                var tam = Regex.Match(corpo, @"font-size:\s*(?:clamp\()?(\d+(?:\.\d+)?)px");
+                if (tam.Success) px = double.Parse(tam.Groups[1].Value, CultureInfo.InvariantCulture);
+                var pes = Regex.Match(corpo, @"font-weight:\s*(\d{3})");
+                if (pes.Success) peso = int.Parse(pes.Groups[1].Value);
+            }
+            Assert.True(px.HasValue, $"{seletor}: texto no verde da marca sem tamanho declarado na mesma regra");
+            Assert.True(px >= 24 || (px >= 18.66 && peso >= 700),
+                $"{seletor}: texto no verde da marca com {px}px e peso {peso}; precisa ser grande (24px+, ou 18,66px+ em negrito)");
+        }
+        Assert.True(checadas >= 10, $"esperava checar os títulos em verde da vitrine; só achei {checadas}");
+    }
+
     [Theory]
     [InlineData("c-cinza")]
     public void Bordas_de_campos_tem_pelo_menos_3_para_1_sobre_branco(string token) =>

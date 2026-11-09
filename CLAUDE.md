@@ -268,3 +268,20 @@ dotnet test tests/Carreiras.Testes
 ### Endereço do portal (PathBase)
 
 O portal é servido sob um prefixo configurável: `PathBase` (variável de ambiente ou configuração). O perfil `http` do `launchSettings.json` já define `PathBase=/rhmetisa`, então `dotnet run --project src/Carreiras.Web --launch-profile http` serve em **http://localhost:5129/rhmetisa/admin**. Com o prefixo ligado, **só** ele vale: `/` redireciona para o portal e qualquer outro caminho sem o prefixo dá 404. Sem `PathBase` (como nos testes), o portal fica na raiz. Nunca escreva caminho fixo em código novo: use `asp-page`, `Url.Page`, `Url.Content("~/...")` e `RedirectToPage`, que já incluem o prefixo (coberto por `PathBaseTestes`).
+
+## 15. Status da Entrega 03 (portal público)
+
+**Rotas:** `/` (início), `/vagas` (lista com filtros), `/vagas/{slug}` (vaga; inexistente ou não publicada = 404 "Vaga não encontrada"), `/candidatar?vaga={slug}` e `/banco-de-talentos` (**páginas de "em breve"**: o formulário é a Entrega 04 e o banco de talentos, a 05). Sob o prefixo configurado, tudo fica em `/rhmetisa/...`.
+
+**Como é feito:** consultas em SQL puro (`VitrineServico`, Dapper); filtros por formulário GET (um por grupo, sem JavaScript obrigatório); layout público próprio (`_LayoutPublico`, `vitrine.css`, 17px); ícones dos benefícios pelo nome gravado no banco (`bi-…`, Bootstrap Icons 1.11.3 hospedado em `wwwroot/lib`); JSON-LD `JobPosting` em `JobPostingJsonLd`; textos editáveis vêm do cadastro de Conteúdo (sobre, qualidade, meio-ambiente, diversidade, privacidade); o restante da seção "Nossa história" (números, fotos, compromissos) é texto fixo portado do protótipo.
+
+**Atendido, com teste:** só `PUBLICADA` aparece (lista, filtros, contagens e URL), inclusive o ciclo publicar → pausar → republicar no mesmo endereço (RN03, pendência da Entrega 02); filtros combináveis e que se mantêm entre si; faixa salarial só com `ExibirSalario = 1` e os dois valores (também na marcação para buscadores); página da vaga com requisitos, atividades, diferenciais, benefícios, unidade e turno; benefícios agrupados por categoria na ordem cadastrada, só os ativos, sem carrossel; JSON-LD válido e à prova de injeção (título com `</script>`); toda imagem com `alt` (as artes repetem o texto que está dentro delas); rodapé com logo, unidades e 3 redes sociais em nova aba (`noopener noreferrer`); verificação de estrutura e axe-core (desktop e 375px) sem violações, exceto a abaixo.
+
+**Exceção conhecida (decisão do dono do produto):** botão primário branco sobre `#019641` (3,86:1), como no portal do RH. Um teste (`Vitrine_usa_o_verde_da_marca_como_texto_so_em_tamanho_grande…`) garante que o verde da marca só vira cor de texto em tamanho grande e que texto branco só vai sobre o verde escuro.
+
+**Pendências deliberadas:**
+- `/candidatar` e `/banco-de-talentos` ainda não recebem currículo (Entregas 04 e 05).
+- A etiqueta "conteúdo de exemplo" **continua na vitrine** para benefícios, programas e textos com `Ficticio = 1` (não há tela que limpe a marca de benefícios e programas; só a de Conteúdo tem a caixa). Antes de publicar de verdade, decidir se cada item é definitivo.
+- O aviso "Ambiente de avaliação" e a nota sobre logo e fotos da Metisa dependem de `Vitrine:AvisoAvaliacao` em `appsettings.json`. **Desligar só depois de trocar imagens e logo por material liberado** (o briefing proíbe publicar com eles).
+- Os links das redes sociais vieram do protótipo e não foram conferidos no ar. O JSON-LD não passou pelo Teste de Resultados Enriquecidos do Google (precisa de URL pública).
+- Teclado conferido por estrutura (elementos nativos, link para pular o conteúdo, âncoras válidas); não houve teste manual com leitor de tela.

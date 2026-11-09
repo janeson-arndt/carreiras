@@ -1,0 +1,17 @@
+@page "/candidatar"
+@model Carreiras.Web.Pages.CandidatarModel
+@{
+    ViewData["Title"] = "Candidatar-se";
+}
+@section Head { <meta name="robots" content="noindex" /> }
+<div class="wrap nao-encontrada">
+    <h1>Candidatar-se</h1>
+    <p>A candidatura online ainda não está aberta. Em breve você poderá enviar seu currículo por aqui, pelo celular se preferir.</p>
+    <p>
+        @if (!string.IsNullOrWhiteSpace(Model.Slug))
+        {
+            <a class="btn btn-sec" asp-page="/Vagas/Detalhe" asp-route-slug="@Model.Slug">Voltar para a vaga</a>
+        }
+        <a class="btn btn-primary" asp-page="/Vagas/Index">Ver vagas abertas</a>
+    </p>
+</div>

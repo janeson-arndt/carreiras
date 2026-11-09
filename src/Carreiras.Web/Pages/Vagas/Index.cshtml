@@ -1,0 +1,15 @@
+@page "/vagas"
+@model Carreiras.Web.Pages.Vagas.IndexModel
+@{
+    ViewData["Title"] = "Vagas abertas";
+    ViewData["Descricao"] = "Vagas abertas na Metisa (Metalúrgica Timboense): filtre por unidade, turno, tipo de contrato e área.";
+}
+<section class="bloco-pagina" id="vagas" style="padding-top: 36px">
+    <div class="wrap">
+        <h1 class="tit" style="font: 700 clamp(30px, 4vw, 44px)/1.05 var(--titulo); color: var(--c-verde)">Vagas abertas</h1>
+        <p class="leg">Escolha uma vaga para ver os detalhes. Os filtros se combinam.</p>
+        <div class="vagas-grid">
+            <partial name="_VagasListagem" model="Model.Listagem" />
+        </div>
+    </div>
+</section>

@@ -1,10 +1,202 @@
-﻿@page
-@model IndexModel
+﻿@page "/"
+@model Carreiras.Web.Pages.IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Vagas e carreira na Metisa";
+    var maxVagas = Math.Max(1, Model.Unidades.Select(u => u.Vagas).DefaultIfEmpty(0).Max());
+    Model.Conteudos.TryGetValue("sobre", out var sobre);
+    Model.Conteudos.TryGetValue("qualidade", out var qualidade);
+    Model.Conteudos.TryGetValue("meio-ambiente", out var ambiente);
+    Model.Conteudos.TryGetValue("diversidade", out var diversidade);
+    Model.Conteudos.TryGetValue("privacidade", out var privacidade);
+    var algumBeneficioExemplo = Model.Categorias.Any(c => c.Itens.Any(i => i.Exemplo));
+    var algumProgramaExemplo = Model.Programas.Any(p => p.Exemplo);
+}
+<div class="hero" id="inicio">
+    <div class="wrap">
+        <div>
+            <h1>Trabalhe onde o aço vira ferramenta</h1>
+            <p class="sub">Veja as vagas abertas em Timbó, Recife e Canoas e candidate-se em poucos minutos, pelo celular se preferir.</p>
+            <div class="acoes">
+                <a class="btn btn-primary" href="#vagas">Ver vagas abertas</a>
+                <a class="btn btn-sec" asp-page="/BancoDeTalentos">Entrar no banco de talentos</a>
+            </div>
+        </div>
+        <figure class="foto-hero">
+            <img src="~/img/vitrine/vista-aerea.jpg" alt="Vista aérea da fábrica da Metisa, com galpões, uma chaminé e área verde ao redor" width="697" height="400" />
+            <figcaption>Vista aérea da fábrica</figcaption>
+        </figure>
+    </div>
+</div>
+
+<div class="faixa-un">
+    <div class="wrap">
+        <h2>Onde estamos contratando</h2>
+        <div class="und-grid" role="group" aria-label="Filtrar vagas por unidade">
+            @foreach (var u in Model.Unidades)
+            {
+                <a class="und" asp-page="/Index" asp-route-unidade="@u.Id" asp-fragment="vagas">
+                    <span class="topo2">
+                        <span><b>@u.Cidade (@u.Uf)</b><small>@u.Tipo</small></span>
+                        <span class="n" aria-label="@u.Vagas @(u.Vagas == 1 ? "vaga" : "vagas")">@u.Vagas</span>
+                    </span>
+                    <span class="barra-un" aria-hidden="true"><i style="width: @(Math.Round(100.0 * u.Vagas / maxVagas))%"></i></span>
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+<section class="bloco-pagina" id="vagas" style="padding-top: 40px" aria-labelledby="t-vagas">
+    <div class="wrap">
+        <h2 class="tit" id="t-vagas">Vagas abertas</h2>
+        <div class="vagas-grid">
+            <partial name="_VagasListagem" model="Model.Listagem" />
+        </div>
+    </div>
+</section>
+
+@if (sobre != null)
+{
+    <section class="bloco-pagina" id="sobre" aria-labelledby="t-sobre">
+        <div class="wrap">
+            <h2 class="tit" id="t-sobre">@sobre.Titulo</h2>
+            <div class="hist">
+                <div>
+                    @{ var ps = IndexModel.Paragrafos(sobre.Texto).ToList(); }
+                    @for (var i = 0; i < ps.Count; i++)
+                    {
+                        <p class="@(i == 0 ? "lead" : null)">@ps[i]</p>
+                    }
+                    <p>Hoje a Metisa produz cerca de 80 mil toneladas de aço por ano, em uma área de 245 mil m² com 40 mil m² construídos. Investe de forma contínua em pessoas, em tecnologia de processo e em métodos modernos de gestão.</p>
+                    <p>O mercado brasileiro é atendido pela matriz, em Santa Catarina, e pela filial de Recife, que funciona como centro de distribuição, além de escritórios de representação pelo país. No exterior, a Metisa está em mais de 60 países, nos 5 continentes.</p>
+                </div>
+                <dl class="stats">
+                    <div><dt>80+</dt><dd>anos de história</dd></div>
+                    <div><dt>1.200</dt><dd>colaboradores</dd></div>
+                    <div><dt>80 mil t</dt><dd>de aço por ano</dd></div>
+                    <div><dt>245 mil m²</dt><dd>de área em Timbó</dd></div>
+                    <div><dt>60+</dt><dd>países, nos 5 continentes</dd></div>
+                    <div><dt>1 milhão+</dt><dd>de árvores em reflorestamento</dd></div>
+                </dl>
+            </div>
+
+            <h3 class="sub-h">O que a Metisa fabrica</h3>
+            <div class="produtos">
+                <figure>
+                    <img src="~/img/vitrine/ferramentas-agricolas.jpg" alt="Trator puxando uma ferramenta em campo arado ao lado de uma lavoura verde. Texto na imagem: Da preparação do solo ao plantio e à colheita, a Metisa surpreende em ferramentas agrícolas." width="800" height="600" loading="lazy" />
+                    <figcaption><strong>Ferramentas agrícolas.</strong> Do preparo do solo à colheita.</figcaption>
+                </figure>
+                <figure>
+                    <img src="~/img/vitrine/ferramentas-penetracao-solo.jpg" alt="Caçamba de escavadeira em terreno de obra. Texto na imagem: Ferramentas de Penetração de Solo, conheça os tipos de FPS da Metisa." width="800" height="600" loading="lazy" />
+                    <figcaption><strong>Ferramentas de penetração de solo.</strong> Para escavação e movimentação de terra.</figcaption>
+                </figure>
+            </div>
+            <ul class="linhas" aria-label="Linhas de produto">
+                <li>Ferramentas agrícolas</li><li>Lâminas para corte de pedras ornamentais</li><li>Ferramentas de penetração de solo</li>
+                <li>Acessórios ferroviários</li><li>Peças para implementos rodoviários</li><li>Ferramentas manuais e arruelas</li>
+            </ul>
+
+            <h3 class="sub-h">Como a Metisa trabalha</h3>
+            <div class="pilares">
+                @if (qualidade != null)
+                {
+                    <div class="pilar">
+                        <h4>@qualidade.Titulo</h4>
+                        @foreach (var p in IndexModel.Paragrafos(qualidade.Texto)) { <p>@p</p> }
+                        <p>Um laboratório metalúrgico próprio faz análises físicas e químicas, e as propriedades mecânicas dos produtos são avaliadas em várias etapas da fabricação.</p>
+                    </div>
+                }
+                @if (ambiente != null)
+                {
+                    <div class="pilar">
+                        <h4>@ambiente.Titulo</h4>
+                        <img src="~/img/vitrine/selo-iso-14001.jpg" alt="Selo de comunicação: Metisa recertificada na ISO 14001, um reconhecimento ao compromisso com o meio ambiente." width="700" height="556" loading="lazy" />
+                        @foreach (var p in IndexModel.Paragrafos(ambiente.Texto)) { <p>@p</p> }
+                    </div>
+                }
+                <div class="pilar">
+                    <h4>Respeito às pessoas</h4>
+                    <p>A política da empresa prevê bem-estar e relacionamento respeitoso entre todos, ambientes limpos e organizados, e seriedade com o trabalho.</p>
+                    <p>A Metisa também publica relatórios de transparência e igualdade salarial entre mulheres e homens.</p>
+                </div>
+            </div>
+
+            <h3 class="sub-h">Compromissos da nossa política</h3>
+            <dl class="comprom">
+                <div><dt>Clientes</dt><dd>Produtos de qualidade, no prazo e com preços competitivos.</dd></div>
+                <div><dt>Fornecedores</dt><dd>Continuidade dos negócios e pagamentos em dia.</dd></div>
+                <div><dt>Funcionários</dt><dd>Bem-estar, respeito e organização no trabalho.</dd></div>
+                <div><dt>Acionistas</dt><dd>Preservação do lucro, sem desperdício.</dd></div>
+                <div><dt>Meio ambiente</dt><dd>Consumo consciente de recursos e cumprimento dos requisitos legais.</dd></div>
+            </dl>
+        </div>
+    </section>
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@if (Model.Categorias.Count > 0)
+{
+    <section class="bloco-pagina" id="beneficios" aria-labelledby="t-ben">
+        <div class="wrap">
+            <h2 class="tit" id="t-ben">Benefícios @if (algumBeneficioExemplo) { <span class="tag-ex">conteúdo de exemplo</span> }</h2>
+            <p class="leg">O que a empresa oferece a quem trabalha com ela. Cada vaga mostra os benefícios que valem para ela.</p>
+            @foreach (var c in Model.Categorias)
+            {
+                <div class="cat">
+                    <h3>@c.Nome</h3>
+                    <div class="cards" tabindex="0" role="region" aria-label="Benefícios: @c.Nome (use as setas para rolar)">
+                        @foreach (var b in c.Itens)
+                        {
+                            <div class="card-ben">
+                                @if (!string.IsNullOrWhiteSpace(b.Icone)) { <i class="bi @b.Icone" aria-hidden="true"></i> }
+                                <h4>@b.Nome</h4>
+                                @if (!string.IsNullOrWhiteSpace(b.Descricao)) { <p>@b.Descricao</p> }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@if (Model.Programas.Count > 0)
+{
+    <section class="bloco-pagina" id="programas" aria-labelledby="t-prog">
+        <div class="wrap">
+            <h2 class="tit" id="t-prog">Programas @if (algumProgramaExemplo) { <span class="tag-ex">conteúdo de exemplo</span> }</h2>
+            <p class="leg">Caminhos de entrada para quem está começando.</p>
+            <div class="tres">
+                @foreach (var p in Model.Programas)
+                {
+                    <div class="prog">
+                        <h3>@p.Nome</h3>
+                        @if (!string.IsNullOrWhiteSpace(p.Descricao)) { <p>@p.Descricao</p> }
+                        @if (!string.IsNullOrWhiteSpace(p.PublicoAlvo)) { <p class="pub">@p.PublicoAlvo</p> }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@if (diversidade != null || privacidade != null)
+{
+    <section class="bloco-pagina" id="diversidade">
+        <div class="wrap duas">
+            @if (diversidade != null)
+            {
+                <div class="bloco-txt">
+                    <h2>@diversidade.Titulo @if (diversidade.Exemplo) { <span class="tag-ex">exemplo</span> }</h2>
+                    @foreach (var p in IndexModel.Paragrafos(diversidade.Texto)) { <p>@p</p> }
+                </div>
+            }
+            @if (privacidade != null)
+            {
+                <div class="bloco-txt" id="privacidade">
+                    <h2>@privacidade.Titulo @if (privacidade.Exemplo) { <span class="tag-ex">exemplo</span> }</h2>
+                    @foreach (var p in IndexModel.Paragrafos(privacidade.Texto)) { <p>@p</p> }
+                </div>
+            }
+        </div>
+    </section>
+}
