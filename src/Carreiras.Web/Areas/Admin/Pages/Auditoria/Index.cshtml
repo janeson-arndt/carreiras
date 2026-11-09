@@ -3,93 +3,112 @@
 @{
     ViewData["Title"] = "Auditoria";
     ViewData["Menu"] = "auditoria";
-    string Rotulo(string t) => t switch
-    {
-        "Vaga" => "Vaga", "Beneficio" => "Benefício", "Programa" => "Programa",
-        "UsuarioRh" => "Usuário", "ConteudoInstitucional" => "Conteúdo", _ => t,
-    };
     var r = Model.Resultado;
+    var filtrou = !string.IsNullOrWhiteSpace(Model.Tabela) || Model.Usuario.HasValue || Model.Registro.HasValue
+                  || !string.IsNullOrWhiteSpace(Model.Campo) || Model.De.HasValue || Model.Ate.HasValue;
 }
-<h1 class="h3 mb-3">Auditoria</h1>
-<p class="text-secundario">Histórico de quem alterou o quê. O registro só é lido: não há como editar nem apagar. Senhas, links e tokens nunca aparecem aqui.</p>
-
-<form method="get" class="cartao p-3 mb-3 row g-2 align-items-end" role="search">
-    <div class="col-sm-6 col-lg-3">
-        <label class="form-label mb-1" for="Tabela">Tipo de registro</label>
-        <select class="form-select" id="Tabela" name="Tabela">
-            <option value="">Todos</option>
-            @foreach (var t in Model.Tabelas) { <option value="@t" selected="@(Model.Tabela == t)">@Rotulo(t)</option> }
-        </select>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <label class="form-label mb-1" for="Usuario">Quem alterou</label>
-        <select class="form-select" id="Usuario" name="Usuario">
-            <option value="">Todos</option>
-            @foreach (var u in Model.Usuarios) { <option value="@u.Id" selected="@(Model.Usuario == u.Id)">@u.Nome</option> }
-        </select>
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <label class="form-label mb-1" for="Campo">Campo</label>
-        <input class="form-control" id="Campo" name="Campo" value="@Model.Campo" />
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <label class="form-label mb-1" for="Registro">Número do registro</label>
-        <input class="form-control" id="Registro" name="Registro" type="number" min="1" value="@Model.Registro" />
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <label class="form-label mb-1" for="De">De</label>
-        <input class="form-control" id="De" name="De" type="date" value="@Model.De?.ToString("yyyy-MM-dd")" aria-invalid="@(Model.ErroPeriodo != null ? "true" : "false")" aria-describedby="e-periodo" />
-    </div>
-    <div class="col-sm-6 col-lg-3">
-        <label class="form-label mb-1" for="Ate">Até</label>
-        <input class="form-control" id="Ate" name="Ate" type="date" value="@Model.Ate?.ToString("yyyy-MM-dd")" aria-invalid="@(Model.ErroPeriodo != null ? "true" : "false")" aria-describedby="e-periodo" />
-    </div>
-    <div class="col-lg-6 d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Filtrar</button>
-        <a class="btn btn-neutro" asp-page="Index">Limpar</a>
-    </div>
-    <div class="col-12 erro-campo" id="e-periodo" role="alert">@Model.ErroPeriodo</div>
-</form>
-
-<p aria-live="polite" class="text-secundario">@r.Total @(r.Total == 1 ? "alteração" : "alterações")</p>
-
-@if (r.Itens.Count == 0 && Model.ErroPeriodo == null)
-{
-    <div class="cartao p-4 text-center">
-        <p class="mb-2">Nenhuma alteração com esses filtros.</p>
-        <a asp-page="Index">Limpar filtros</a>
-    </div>
-}
-else if (r.Itens.Count > 0)
-{
-<div class="cartao">
-    <div class="table-responsive" tabindex="0" role="region" aria-label="Alterações registradas (use as setas para rolar a tabela)">
-    <table class="table align-middle mb-0">
-        <caption class="visually-hidden">Alterações registradas</caption>
-        <thead><tr><th scope="col">Quando</th><th scope="col">Quem</th><th scope="col">Registro</th><th scope="col">Campo</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
-        <tbody>
-        @foreach (var l in r.Itens)
-        {
-            <tr>
-                <td class="text-nowrap"><time datetime="@DateTime.SpecifyKind(l.DataHoraUtc, DateTimeKind.Utc).ToString("o")">@DateTime.SpecifyKind(l.DataHoraUtc, DateTimeKind.Utc).ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</time></td>
-                <td>@l.Usuario</td>
-                <td><span class="etiqueta">@Rotulo(l.Tabela)</span><br /><small>@l.Registro</small></td>
-                <td>@l.Campo</td>
-                <td class="text-break">@(l.ValorAntigo ?? "—")</td>
-                <td class="text-break">@(l.ValorNovo ?? "—")</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+<div class="topo-pagina">
+    <div>
+        <h1>Auditoria</h1>
+        <p>Toda alteração feita neste portal fica registrada: quem, quando, em qual campo, e o valor antes e depois.</p>
     </div>
 </div>
+<p class="ajuda" style="margin: 0 0 12px">O registro só pode ser consultado: não há como editar nem apagar. Senhas, links e tokens nunca aparecem aqui.</p>
 
+<form method="get" class="filtros" role="search">
+    <div>
+        <label class="form-label" for="Tabela">Tabela</label>
+        <select class="form-select" id="Tabela" name="Tabela">
+            <option value="">Todas</option>
+            @foreach (var t in Model.Tabelas)
+            {
+                <option value="@t" selected="@(Model.Tabela == t)">@t</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label" for="Usuario">Usuário</label>
+        <select class="form-select" id="Usuario" name="Usuario">
+            <option value="">Todos</option>
+            @foreach (var u in Model.Usuarios)
+            {
+                <option value="@u.Id" selected="@(Model.Usuario == u.Id)">@u.Nome</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label" for="Campo">Campo</label>
+        <input class="form-control" id="Campo" name="Campo" value="@Model.Campo" />
+    </div>
+    <div style="min-width: 130px">
+        <label class="form-label" for="Registro">Registro nº</label>
+        <input class="form-control" id="Registro" name="Registro" type="number" min="1" value="@Model.Registro" />
+    </div>
+    <div>
+        <label class="form-label" for="De">De</label>
+        <input class="form-control" id="De" name="De" type="date" value="@Model.De?.ToString("yyyy-MM-dd")" aria-invalid="@(Model.ErroPeriodo != null ? "true" : "false")" aria-describedby="e-periodo" />
+    </div>
+    <div>
+        <label class="form-label" for="Ate">Até</label>
+        <input class="form-control" id="Ate" name="Ate" type="date" value="@Model.Ate?.ToString("yyyy-MM-dd")" aria-invalid="@(Model.ErroPeriodo != null ? "true" : "false")" aria-describedby="e-periodo" />
+    </div>
+    <button class="btn btn-sec" type="submit">Filtrar</button>
+    <a class="btn btn-sec" asp-page="Index">Limpar</a>
+</form>
+<div class="erro-campo" id="e-periodo" role="alert" style="margin: -4px 0 12px">@Model.ErroPeriodo</div>
+
+@if (r.Itens.Count == 0 && Model.ErroPeriodo == null && filtrou)
+{
+    <div class="cartao vazio">
+        <p>Nenhuma alteração com esses filtros.</p>
+        <a class="btn btn-sec" asp-page="Index">Limpar filtros</a>
+    </div>
+}
+@if (r.Itens.Count == 0 && Model.ErroPeriodo == null && !filtrou)
+{
+    <div class="cartao vazio">
+        <p>Nenhuma alteração registrada ainda.</p>
+        <p class="ajuda">Edite uma vaga, mude um status ou altere um cadastro e o registro aparece aqui.</p>
+    </div>
+}
+@if (r.Itens.Count > 0)
+{
+    <p class="contagem" aria-live="polite">@(r.Total) @(r.Total == 1 ? "registro" : "registros")</p>
+    <div class="cartao">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Alterações registradas (use as setas para rolar a tabela)">
+            <table class="table">
+                <caption class="visually-hidden">Alterações registradas</caption>
+                <thead><tr><th scope="col">Data e hora</th><th scope="col">Usuário</th><th scope="col">Tabela</th><th scope="col">Registro</th><th scope="col">Campo</th><th scope="col">Valor antigo</th><th scope="col">Valor novo</th></tr></thead>
+                <tbody>
+                    @foreach (var l in r.Itens)
+                    {
+                        var quando = DateTime.SpecifyKind(l.DataHoraUtc, DateTimeKind.Utc);
+                        <tr>
+                            <td class="text-nowrap"><time datetime="@quando.ToString("o")">@quando.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</time></td>
+                            <td>@l.Usuario</td>
+                            <td>@l.Tabela</td>
+                            <td>#@(l.RegistroId)<div class="ajuda">@l.Registro</div></td>
+                            <td>@l.Campo</td>
+                            <td class="valor">@(string.IsNullOrEmpty(l.ValorAntigo) ? "-" : l.ValorAntigo)</td>
+                            <td class="valor">@(string.IsNullOrEmpty(l.ValorNovo) ? "-" : l.ValorNovo)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
 @if (r.TotalPaginas > 1)
 {
     <nav aria-label="Páginas da auditoria" class="mt-3 d-flex align-items-center gap-2">
-        @if (r.Pagina > 1) { <a class="btn btn-neutro btn-sm" asp-page="Index" asp-all-route-data="Model.Rota(r.Pagina - 1)">Anterior</a> }
-        <span aria-current="page">Página @r.Pagina de @r.TotalPaginas</span>
-        @if (r.Pagina < r.TotalPaginas) { <a class="btn btn-neutro btn-sm" asp-page="Index" asp-all-route-data="Model.Rota(r.Pagina + 1)">Próxima</a> }
+        @if (r.Pagina > 1)
+        {
+            <a class="btn btn-sec btn-peq" asp-page="Index" asp-all-route-data="Model.Rota(r.Pagina - 1)">Anterior</a>
+        }
+        <span aria-current="page">Página @(r.Pagina) de @(r.TotalPaginas)</span>
+        @if (r.Pagina < r.TotalPaginas)
+        {
+            <a class="btn btn-sec btn-peq" asp-page="Index" asp-all-route-data="Model.Rota(r.Pagina + 1)">Próxima</a>
+        }
     </nav>
-}
 }

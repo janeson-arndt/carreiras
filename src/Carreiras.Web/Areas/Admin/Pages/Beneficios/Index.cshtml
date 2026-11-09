@@ -4,8 +4,11 @@
     ViewData["Title"] = "Benefícios";
     ViewData["Menu"] = "beneficios";
 }
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h3 mb-0">Benefícios</h1>
+<div class="topo-pagina">
+    <div>
+        <h1>Benefícios</h1>
+        <p>Catálogo exibido na vitrine e escolhido em cada vaga.</p>
+    </div>
     @if (Model.PodeEditar)
     {
         <a class="btn btn-primary" asp-page="Editar">Novo benefício</a>
@@ -13,43 +16,50 @@
 </div>
 @if (!Model.PodeEditar)
 {
-    <p class="text-secundario">Seu perfil só consulta os cadastros. Para alterar, peça a um administrador.</p>
+    <p class="somente">Os cadastros são mantidos pelo perfil Administrador. Você pode consultar, mas não alterar.</p>
 }
 @foreach (var c in Model.Categorias)
 {
-    <section class="cartao mb-3" aria-labelledby="cat-@c.Id">
-        <h2 class="h5 p-3 pb-0" id="cat-@c.Id">@c.Nome</h2>
-        <div class="table-responsive" style="overflow: visible">
-        <table class="table align-middle mb-0 tabela-cartoes" role="table">
+    <h2 style="margin: 18px 0 8px">@c.Nome</h2>
+    <div class="cartao">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Benefícios da categoria @c.Nome (use as setas para rolar a tabela)">
+        <table class="table tabela-cartoes" role="table">
             <caption class="visually-hidden">Benefícios da categoria @c.Nome</caption>
-            <thead><tr role="row"><th role="columnheader" scope="col">Benefício</th><th role="columnheader" scope="col">Ícone</th><th role="columnheader" scope="col">Ordem</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col" class="text-end">Ações</th></tr></thead>
+            <thead><tr role="row"><th role="columnheader" scope="col">Ordem</th><th role="columnheader" scope="col">Benefício</th><th role="columnheader" scope="col">Frase curta</th><th role="columnheader" scope="col">Ícone</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col">Ações</th></tr></thead>
             <tbody>
             @foreach (var b in c.Beneficios.OrderBy(x => x.Ordem).ThenBy(x => x.Nome))
             {
                 <tr role="row">
-                    <td role="cell"><strong>@b.Nome</strong>@if (b.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@b.DescricaoCurta</small></td>
-                    <td role="cell" data-rotulo="Ícone"><code>@b.Icone</code></td>
                     <td role="cell" data-rotulo="Ordem">@b.Ordem</td>
-                    <td role="cell" data-rotulo="Situação"><span class="etiqueta @(b.Ativo ? "" : "inativo")">@(b.Ativo ? "Ativo" : "Desativado")</span></td>
-                    <td role="cell" class="text-end text-nowrap">
-                        <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@b.Id">@(Model.PodeEditar ? "Editar" : "Ver")</a>
+                    <td role="cell"><strong>@b.Nome</strong></td>
+                    <td role="cell" data-rotulo="Frase curta">@b.DescricaoCurta</td>
+                    <td role="cell" data-rotulo="Ícone">@b.Icone</td>
+                    <td role="cell" data-rotulo="Situação">@(b.Ativo ? "Ativo" : "Inativo")</td>
+                    <td role="cell">
                         @if (Model.PodeEditar)
                         {
-                            <div class="acoes">
-                                <button type="button" class="btn btn-sm btn-neutro" data-acoes aria-expanded="false" aria-controls="acoes-@b.Id">Ações</button>
-                                <div class="acoes-lista text-start" id="acoes-@b.Id" hidden>
-                                    @if (b.Ativo)
-                                    {
-                                        <form method="post" asp-page-handler="Alternar" asp-route-id="@b.Id" asp-route-ativo="false">
-                                            <button type="submit" class="perigo" data-confirmar="Desativar @b.Nome? Ele deixa de aparecer para novas vagas.">Desativar</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <form method="post" asp-page-handler="Alternar" asp-route-id="@b.Id" asp-route-ativo="true"><button type="submit">Reativar</button></form>
-                                    }
+                            <div class="acoes-linha">
+                                <a class="btn btn-sec btn-peq" asp-page="Editar" asp-route-id="@b.Id">Editar</a>
+                                <div class="acoes">
+                                    <button type="button" class="btn btn-sec btn-peq" data-acoes aria-expanded="false" aria-controls="acoes-@b.Id" aria-label="Mais ações para @b.Nome">Ações <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+                                    <div class="acoes-lista" id="acoes-@b.Id" hidden>
+                                        @if (b.Ativo)
+                                        {
+                                            <form method="post" asp-page-handler="Alternar" asp-route-id="@b.Id" asp-route-ativo="false">
+                                                <button type="submit" class="perigo" data-confirmar="Desativar @b.Nome? Ele deixa de aparecer para novas vagas.">Desativar</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-page-handler="Alternar" asp-route-id="@b.Id" asp-route-ativo="true"><button type="submit">Reativar</button></form>
+                                        }
+                                    </div>
                                 </div>
                             </div>
+                        }
+                        else
+                        {
+                            <a asp-page="Editar" asp-route-id="@b.Id" aria-label="Ver @b.Nome">Ver</a>
                         }
                     </td>
                 </tr>
@@ -57,5 +67,5 @@
             </tbody>
         </table>
         </div>
-    </section>
+    </div>
 }

@@ -5,20 +5,26 @@
     ViewData["Title"] = "Usuários";
     ViewData["Menu"] = "usuarios";
     string Rotulo(SituacaoUsuario s) => s switch { SituacaoUsuario.Ativo => "Ativo", SituacaoUsuario.ConvitePendente => "Convite pendente", _ => "Desativado" };
-    string Classe(SituacaoUsuario s) => s switch { SituacaoUsuario.Ativo => "", SituacaoUsuario.ConvitePendente => "pendente", _ => "inativo" };
+    // mesmos selos do protótipo: Ativo = verde, Convite pendente = âmbar, Desativado = cinza escuro
+    string Selo(SituacaoUsuario s) => s switch { SituacaoUsuario.Ativo => "s-PUBLICADA", SituacaoUsuario.ConvitePendente => "s-PAUSADA", _ => "s-ENCERRADA" };
+    string Perfil(string p) => p.Length == 0 ? "" : char.ToUpperInvariant(p[0]) + p[1..].ToLowerInvariant();
 }
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h3 mb-0">Usuários</h1>
+<div class="topo-pagina">
+    <div>
+        <h1>Usuários</h1>
+        <p>Quem pode entrar no portal do RH e com qual perfil.</p>
+    </div>
     <a class="btn btn-primary" asp-page="Novo">Novo usuário</a>
 </div>
+<p class="ajuda" style="margin: 0 0 12px">Usuários não são excluídos. Ao desativar, a pessoa perde o acesso e o histórico dela continua nos registros.</p>
 
-<form method="get" class="cartao p-3 mb-3 d-flex flex-wrap gap-2 align-items-end" role="search">
-    <div>
-        <label class="form-label mb-1" for="q">Buscar por nome ou e-mail</label>
+<form method="get" class="filtros" role="search">
+    <div class="busca">
+        <label class="form-label" for="q">Buscar por nome ou e-mail</label>
         <input class="form-control" id="q" name="q" value="@Model.Q" />
     </div>
     <div>
-        <label class="form-label mb-1" for="situacao">Situação</label>
+        <label class="form-label" for="situacao">Situação</label>
         <select class="form-select" id="situacao" name="situacao">
             <option value="">Todas</option>
             <option value="ativo" selected="@(Model.Situacao == "ativo")">Ativo</option>
@@ -26,26 +32,25 @@
             <option value="desativado" selected="@(Model.Situacao == "desativado")">Desativado</option>
         </select>
     </div>
-    <button class="btn btn-neutro" type="submit">Filtrar</button>
+    <button class="btn btn-sec" type="submit">Filtrar</button>
 </form>
-
-<p aria-live="polite" class="text-secundario">@Model.Itens.Count @(Model.Itens.Count == 1 ? "usuário" : "usuários")</p>
 
 @if (Model.Itens.Count == 0)
 {
-    <div class="cartao p-4 text-center">
-        <p class="mb-2">Nenhum usuário com esses filtros.</p>
-        <a asp-page="Index">Limpar filtros</a>
+    <div class="cartao vazio">
+        <p>Nenhum usuário com esses filtros.</p>
+        <a class="btn btn-sec" asp-page="Index">Limpar filtros</a>
     </div>
 }
 else
 {
+<p class="contagem" aria-live="polite">@Model.Itens.Count @(Model.Itens.Count == 1 ? "usuário" : "usuários")</p>
 <div class="cartao">
-    <div class="table-responsive" style="overflow: visible">
-    <table class="table align-middle mb-0 tabela-cartoes" role="table">
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Usuários do portal do RH (use as setas para rolar a tabela)">
+    <table class="table tabela-cartoes" role="table">
         <caption class="visually-hidden">Usuários do portal do RH</caption>
         <thead>
-            <tr role="row"><th role="columnheader" scope="col">Nome</th><th role="columnheader" scope="col">Perfil</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col">Último acesso</th><th role="columnheader" scope="col" class="text-end">Ações</th></tr>
+            <tr role="row"><th role="columnheader" scope="col">Usuário</th><th role="columnheader" scope="col">Perfil</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col">Último acesso</th><th role="columnheader" scope="col">Ações</th></tr>
         </thead>
         <tbody>
         @foreach (var u in Model.Itens)
@@ -53,42 +58,44 @@ else
             var proprio = u.Id == Model.AtorId;
             var motivo = Model.MotivoDesativar(u);
             <tr role="row">
-                <td role="cell"><strong>@u.Nome</strong>@if (proprio) { <span class="text-secundario"> (você)</span> }<br /><small class="text-secundario">@u.Email</small></td>
-                <td role="cell" data-rotulo="Perfil">@u.Perfil</td>
-                <td role="cell" data-rotulo="Situação"><span class="etiqueta @Classe(u.Situacao)">@Rotulo(u.Situacao)</span></td>
+                <td role="cell"><strong>@u.Nome</strong>@if (proprio) { <span class="ex">você</span> }<div class="ajuda">@u.Email</div></td>
+                <td role="cell" data-rotulo="Perfil">@Perfil(u.Perfil)</td>
+                <td role="cell" data-rotulo="Situação"><span class="selo @Selo(u.Situacao)">@Rotulo(u.Situacao)</span></td>
                 <td role="cell" data-rotulo="Último acesso">@(u.UltimoAcessoEm.HasValue ? u.UltimoAcessoEm.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "Nunca entrou")</td>
-                <td role="cell" class="text-end text-nowrap">
-                    <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@u.Id">Editar</a>
-                    <div class="acoes">
-                        <button type="button" class="btn btn-sm btn-neutro" data-acoes aria-expanded="false" aria-controls="acoes-@u.Id">Ações</button>
-                        <div class="acoes-lista text-start" id="acoes-@u.Id" hidden>
-                            @if (u.Situacao == SituacaoUsuario.ConvitePendente)
-                            {
-                                <form method="post" asp-page-handler="ReenviarConvite" asp-route-id="@u.Id"><button type="submit">Reenviar convite</button></form>
-                            }
-                            @if (u.Ativo && u.ConviteAceito)
-                            {
-                                <form method="post" asp-page-handler="NovaSenha" asp-route-id="@u.Id"><button type="submit">Enviar link de nova senha</button></form>
-                            }
-                            @if (!u.Ativo)
-                            {
-                                <form method="post" asp-page-handler="Reativar" asp-route-id="@u.Id"><button type="submit">Reativar</button></form>
-                            }
-                            @if (u.Ativo)
-                            {
-                                <hr />
-                                <form method="post" asp-page-handler="Desativar" asp-route-id="@u.Id">
-                                    @if (motivo == null)
-                                    {
-                                        <button type="submit" class="perigo" data-confirmar="Desativar @u.Nome? A pessoa perde o acesso e as sessões abertas.">Desativar</button>
-                                    }
-                                    else
-                                    {
-                                        <button type="submit" class="perigo" aria-disabled="true" aria-describedby="motivo-@u.Id">Desativar</button>
-                                        <div class="motivo" id="motivo-@u.Id">@motivo</div>
-                                    }
-                                </form>
-                            }
+                <td role="cell">
+                    <div class="acoes-linha">
+                        <a class="btn btn-sec btn-peq" asp-page="Editar" asp-route-id="@u.Id">Editar</a>
+                        <div class="acoes">
+                            <button type="button" class="btn btn-sec btn-peq" data-acoes aria-expanded="false" aria-controls="acoes-@u.Id" aria-label="Mais ações para @u.Nome">Ações <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+                            <div class="acoes-lista" id="acoes-@u.Id" hidden>
+                                @if (u.Situacao == SituacaoUsuario.ConvitePendente)
+                                {
+                                    <form method="post" asp-page-handler="ReenviarConvite" asp-route-id="@u.Id"><button type="submit">Reenviar convite</button></form>
+                                }
+                                @if (u.Ativo && u.ConviteAceito)
+                                {
+                                    <form method="post" asp-page-handler="NovaSenha" asp-route-id="@u.Id"><button type="submit">Enviar link de nova senha</button></form>
+                                }
+                                @if (!u.Ativo)
+                                {
+                                    <form method="post" asp-page-handler="Reativar" asp-route-id="@u.Id"><button type="submit">Reativar</button></form>
+                                }
+                                @if (u.Ativo)
+                                {
+                                    <hr />
+                                    <form method="post" asp-page-handler="Desativar" asp-route-id="@u.Id">
+                                        @if (motivo == null)
+                                        {
+                                            <button type="submit" class="perigo" data-confirmar="Desativar @u.Nome? A pessoa perde o acesso e as sessões abertas.">Desativar</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="perigo" aria-disabled="true" aria-describedby="motivo-@u.Id">Desativar</button>
+                                            <div class="motivo" id="motivo-@u.Id">@motivo</div>
+                                        }
+                                    </form>
+                                }
+                            </div>
                         </div>
                     </div>
                 </td>

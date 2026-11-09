@@ -12,17 +12,35 @@
       if (b !== exceto) fechar(b, false);
     });
   }
+  // O menu usa posição fixa (como o popover do protótipo): assim a tabela pode rolar na horizontal
+  // sem cortar o menu, e ele abre para cima quando falta espaço embaixo.
+  function posicionar(botao, lista) {
+    var r = botao.getBoundingClientRect();
+    lista.style.left = 'auto';
+    lista.style.bottom = 'auto';
+    lista.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+    lista.style.top = (r.bottom + 4) + 'px';
+    var m = lista.getBoundingClientRect();
+    if (m.bottom > window.innerHeight - 8 && r.top - 4 - m.height > 8) lista.style.top = (r.top - 4 - m.height) + 'px';
+    m = lista.getBoundingClientRect();
+    if (m.left < 8) { lista.style.right = 'auto'; lista.style.left = '8px'; }
+  }
   function abrir(botao) {
     fecharTodos(botao);
     var lista = document.getElementById(botao.getAttribute('aria-controls'));
     botao.setAttribute('aria-expanded', 'true');
     lista.hidden = false;
-    lista.style.left = ''; lista.style.right = '0';
-    var r = lista.getBoundingClientRect();
-    if (r.left < 8) { lista.style.right = 'auto'; lista.style.left = '0'; }
+    posicionar(botao, lista);
     var primeiro = lista.querySelector('button:not([aria-disabled="true"])');
-    if (primeiro) primeiro.focus();
+    if (primeiro) primeiro.focus({ preventScroll: true });
   }
+
+  // Rolar a página ou redimensionar fecha o menu (a posição fixa deixaria de acompanhar o botão).
+  window.addEventListener('scroll', function (e) {
+    if (e.target && e.target.closest && e.target.closest('.acoes-lista')) return;
+    fecharTodos(null);
+  }, true);
+  window.addEventListener('resize', function () { fecharTodos(null); });
 
   document.addEventListener('click', function (e) {
     var botao = e.target.closest('[data-acoes]');

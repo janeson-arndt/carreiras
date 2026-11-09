@@ -33,9 +33,15 @@ public sealed class VagaForm
     public List<string> Diferenciais { get; set; } = new();
 }
 
+/// <summary>Unidade = cidade (como no protótipo). AtualizadaEm = última alteração registrada na auditoria, ou a criação.</summary>
 public sealed record VagaLinha(
     int Id, string Slug, string Titulo, string Status, string Unidade, string Area, string Turno,
-    DateTime? PublicadaEm, int Candidaturas);
+    DateTime? PublicadaEm, int Candidaturas, DateTime AtualizadaEm);
+
+public sealed record HistoricoStatus(string Status, DateTime AlteradoEm, string? Usuario);
+
+/// <summary>Dados do painel "Publicação" do editor.</summary>
+public sealed record VagaResumo(string Slug, string Status, DateTime? PublicadaEm, List<HistoricoStatus> Historico);
 
 public sealed record FiltroVagas(string? Busca = null, string? Status = null, int? UnidadeId = null);
 
@@ -48,8 +54,9 @@ public sealed class VagaServico
     public async Task<List<VagaLinha>> ListarAsync(FiltroVagas f, CancellationToken ct = default)
     {
         const string sql = @"
-SELECT v.Id, v.Slug, v.Titulo, v.Status, u.Nome AS Unidade, a.Nome AS Area, t.Nome AS Turno, v.PublicadaEm,
-       (SELECT COUNT(*) FROM dbo.Candidatura c WHERE c.VagaId = v.Id) AS Candidaturas
+SELECT v.Id, v.Slug, v.Titulo, v.Status, u.Cidade + N' (' + u.Uf + N')' AS Unidade, a.Nome AS Area, t.Nome AS Turno, v.PublicadaEm,
+       (SELECT COUNT(*) FROM dbo.Candidatura c WHERE c.VagaId = v.Id) AS Candidaturas,
+       COALESCE((SELECT MAX(l.DataHora) FROM dbo.LogAuditoria l WHERE l.Tabela = 'Vaga' AND l.RegistroId = v.Id), v.CriadaEm) AS AtualizadaEm
 FROM dbo.Vaga v
 JOIN dbo.Unidade u ON u.Id = v.UnidadeId
 JOIN dbo.Area a ON a.Id = v.AreaId
@@ -68,6 +75,17 @@ ORDER BY CASE v.Status WHEN 'PUBLICADA' THEN 0 WHEN 'PAUSADA' THEN 1 WHEN 'RASCU
         if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync(ct);
         try { return (await conn.QueryAsync<VagaLinha>(cmd)).ToList(); }
         finally { await _db.Database.CloseConnectionAsync(); }
+    }
+
+    public async Task<VagaResumo?> ResumoAsync(int id, CancellationToken ct = default)
+    {
+        var v = await _db.Vagas.AsNoTracking().Where(x => x.Id == id)
+            .Select(x => new { x.Slug, x.Status, x.PublicadaEm }).SingleOrDefaultAsync(ct);
+        if (v == null) return null;
+        var hist = await _db.VagaStatusHists.AsNoTracking().Where(h => h.VagaId == id)
+            .OrderBy(h => h.AlteradoEm).ThenBy(h => h.Id)
+            .Select(h => new HistoricoStatus(h.Status, h.AlteradoEm, h.UsuarioRh == null ? null : h.UsuarioRh.Nome)).ToListAsync(ct);
+        return new VagaResumo(v.Slug, v.Status, v.PublicadaEm, hist);
     }
 
     public async Task<(VagaForm Form, string Status)?> ObterAsync(int id, CancellationToken ct = default)

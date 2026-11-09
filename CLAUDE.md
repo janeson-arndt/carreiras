@@ -91,7 +91,7 @@ docs/                       análise e protótipos
 | RN12 | **Auditoria centralizada**: toda alteração nas tabelas auditadas é gravada em `LogAuditoria` por **um único ponto** (interceptador de `SaveChanges` do EF Core). Não use `ExecuteUpdate`/`ExecuteDelete` nessas tabelas, porque eles não passam pelo interceptador. Listas (benefícios da vaga) comparam-se como **conjunto**, sem considerar a ordem. Salvar sem mudar nada **não grava log**. |
 | RN13 | `ADMINISTRADOR` faz tudo. `ANALISTA` gerencia vagas e candidaturas e **só consulta** os cadastros. `LEITURA` só consulta. Benefícios, programas, conteúdo da vitrine, **usuários** e auditoria são do administrador (proposta a confirmar). |
 | RN14 | Benefícios na vitrine: agrupados por categoria, na ordem cadastrada, com ícone. A cor dos cartões vem do CSS, **não do banco**. |
-| RN15 | Conteúdo fictício é marcado com `Ficticio = 1` e aparece com a etiqueta "exemplo" no portal do RH. |
+| RN15 | Conteúdo fictício é marcado com `Ficticio = 1` no banco. **Decisão do dono do produto (08/11/2026): a etiqueta "exemplo" foi removida das telas do RH**; a marca continua só no banco (e na caixa "Texto de exemplo" da tela de Conteúdo), e não deve ser perdida ao editar. Antes de publicar o portal, revise os itens com `Ficticio = 1` (o texto de privacidade traz um e-mail de encarregado de dados fictício). |
 | RN16 | **Sempre ao menos um administrador ativo.** A aplicação bloqueia desativar ou rebaixar o último administrador que consegue entrar (conta ativa e convite já aceito). Faça a verificação e a alteração **na mesma transação**, travando as linhas dos administradores (por exemplo `UPDLOCK, HOLDLOCK` ou isolamento `Serializable`), para que duas desativações simultâneas não deixem o portal sem administrador. **Decisão tomada: não há gatilho no banco**; a regra vive só na aplicação. |
 | RN17 | Ninguém desativa a si mesmo nem muda o próprio perfil. Quem faz isso é outro administrador. |
 | RN18 | **Convite, sem senha.** O administrador cadastra nome, e-mail e perfil. A pessoa recebe e-mail com link de uso único e prazo para criar a própria senha. Ninguém além dela define ou vê a senha. "Enviar link de nova senha" segue o mesmo modelo. |
@@ -134,7 +134,7 @@ As Entregas 01 a 04 formam o MVP funcional. Critérios por entrega:
 - Vaga em rascunho não aparece no portal público.
 - Cada mudança de status grava `VagaStatusHist` e `LogAuditoria`. Cada edição de campo grava log com usuário, tabela, campo, valor antigo e novo.
 - Duplicar cria rascunho com slug novo e único. Vaga encerrada abre bloqueada.
-- Itens de exemplo exibem a etiqueta "exemplo".
+- ~~Itens de exemplo exibem a etiqueta "exemplo".~~ Removido a pedido do dono do produto (ver RN15).
 - Salvar sem alteração não grava log. Os campos obrigatórios valem também para o rascunho.
 - O menu **Ações** abre pelo teclado, fecha com Esc devolvendo o foco ao botão, e Encerrar aparece separado e em vermelho.
 - **Usuários** (só `ADMINISTRADOR`): lista com situação (Ativo, Convite pendente, Desativado), busca e filtro. O administrador cadastra usuário com nome, e-mail e perfil, **inclusive outro administrador**; a pessoa recebe convite e o formulário **não tem campo de senha**.
@@ -258,7 +258,7 @@ dotnet test tests/Carreiras.Testes
 **Pendências conhecidas, deliberadas:**
 - "Vaga em rascunho não aparece no portal público" só pode ser verificado na Entrega 03 (RN03 vira teste lá).
 - A tela de Conteúdo não tem anexo de `Documento` (a tabela existe).
-- `Vaga` não tem coluna `Ficticio`: as vagas de exemplo do seed não ganham a etiqueta "exemplo" (decidir se vale uma migração).
+- ~~`Vaga` não tem coluna `Ficticio`~~: deixou de ser pendência, pois a etiqueta "exemplo" foi removida das telas.
 - Antes de publicar em HTTPS: `Cookie.SecurePolicy` está `SameAsRequest`; trocar para `Always`. O SMTP real ainda não foi configurado (em desenvolvimento o e-mail vai para `storage/emails`).
 - Decisão nº 8 do briefing fechada: os 13 ícones do seed existem no Bootstrap Icons 1.11.3.
 

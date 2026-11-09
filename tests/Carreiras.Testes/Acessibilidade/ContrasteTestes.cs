@@ -67,6 +67,7 @@ public class ContrasteTestes
     [InlineData("c-verde-escuro", "c-fundo")]
     [InlineData("c-verde-escuro", "c-verde-claro")]
     [InlineData("c-verde-escuro-hover", "#FFFFFF")]
+    [InlineData("c-verde-escuro-hover", "c-verde-claro")]   // iniciais do avatar
     [InlineData("c-erro", "#FFFFFF")]
     [InlineData("c-erro", "c-erro-fundo")]
     public void Texto_dos_tokens_tem_pelo_menos_4_5_para_1(string fg, string bg)
@@ -98,15 +99,15 @@ public class ContrasteTestes
         Assert.True(Razao(Token(token), "#FFFFFF") >= 3.0);
 
     [Theory]
-    [InlineData(".etiqueta.pendente")]
-    [InlineData(".etiqueta.inativo")]
-    [InlineData(".etiqueta.exemplo")]
-    [InlineData(".etiqueta")]
+    [InlineData(".s-RASCUNHO")]
+    [InlineData(".s-PUBLICADA")]
+    [InlineData(".s-PAUSADA")]
+    [InlineData(".s-ENCERRADA")]
     [InlineData(".aviso-erro")]
     [InlineData(".aviso-ok")]
     public void Componentes_com_cores_proprias_passam(string seletor)
     {
-        // o seletor ".etiqueta" não pode casar com ".etiqueta.pendente": procura o bloco exato
+        // selos de situação do protótipo (Rascunho, Publicada, Pausada, Encerrada) e avisos
         var cor = Declarado(seletor, "color:?");
         var fundo = Declarado(seletor, "background");
         var r = Razao(cor, fundo);
@@ -116,8 +117,10 @@ public class ContrasteTestes
     [Fact]
     public void Texto_de_apoio_do_menu_e_dicas_usam_o_cinza_de_texto()
     {
-        // .text-secundario e .grupo (rótulo do menu) usam o cinza de texto (#5C5C5C), não o cinza de bordas (#717171)
-        Assert.Equal(Token("c-cinza-texto"), Declarado(".text-secundario", "color"), ignoreCase: true);
-        Assert.Equal(Token("c-cinza-texto"), Declarado(".admin-menu .grupo", "color"), ignoreCase: true);
+        // textos de apoio (.ajuda, .text-secundario, subtítulo, marca) usam o cinza de texto (#5C5C5C), não o de bordas (#717171)
+        Assert.Equal(Token("c-cinza-texto"), Declarado(".text-secundario, .ajuda", "color"), ignoreCase: true);
+        Assert.Equal(Token("c-cinza-texto"), Declarado(".topo-pagina p", "color"), ignoreCase: true);
+        Assert.Equal(Token("c-cinza-texto"), Declarado(".admin-marca small", "color"), ignoreCase: true);
+        Assert.Equal(Token("c-cinza-texto"), Declarado(".conta-txt small", "color"), ignoreCase: true);
     }
 }

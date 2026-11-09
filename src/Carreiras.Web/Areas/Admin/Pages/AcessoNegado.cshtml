@@ -3,6 +3,6 @@
     ViewData["Title"] = "Acesso negado";
     Layout = User.Identity?.IsAuthenticated == true ? "_AdminLayout" : "_AuthLayout";
 }
-<h1 class="h4">Você não tem acesso a esta área</h1>
+<h1>Você não tem acesso a esta área</h1>
 <p>Seu perfil não permite esta ação. Se precisa dela, peça a um administrador para ajustar o seu perfil.</p>
 <a class="btn btn-neutro" asp-area="Admin" asp-page="/Index">Voltar ao início</a>

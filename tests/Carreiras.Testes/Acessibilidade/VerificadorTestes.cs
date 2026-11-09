@@ -38,6 +38,22 @@ public class VerificadorTestes
     }
 
     [Fact]
+    public async Task Reprova_aside_sem_nome_ou_repetido_e_aceita_nomes_distintos()
+    {
+        Assert.Contains(await Problemas(Bom.Replace("</main>", "<aside>a</aside></main>")), m => m.Contains("aside sem aria-label"));
+        Assert.Contains(await Problemas(Bom.Replace("</main>", "<aside aria-label=\"X\">a</aside><aside aria-label=\"x\">b</aside></main>")), m => m.Contains("nome repetido"));
+        Assert.Empty(await Problemas(Bom.Replace("</main>", "<aside aria-label=\"X\">a</aside><aside aria-label=\"Y\">b</aside></main>")));
+    }
+
+    [Fact]
+    public async Task Aceita_rotulo_por_envolvimento_mas_reprova_label_envolvente_vazio()
+    {
+        Assert.Empty(await Problemas(Bom.Replace("</main>", "<label><input type=\"radio\" name=\"p\" /> Opção</label></main>")));
+        var ruim = await Problemas(Bom.Replace("</main>", "<label><input type=\"radio\" name=\"p\" /></label></main>"));
+        Assert.Contains(ruim, m => m.Contains("campo sem rótulo"));
+    }
+
+    [Fact]
     public async Task Reprova_tabela_sem_legenda_e_th_sem_scope() =>
         Assert.Contains("tabela sem <caption>", await Problemas(Bom.Replace("</main>", "<table><tr><th>A</th></tr></table></main>")));
 

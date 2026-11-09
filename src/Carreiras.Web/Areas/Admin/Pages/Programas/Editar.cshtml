@@ -5,33 +5,44 @@
     ViewData["Menu"] = "programas";
     var dis = Model.PodeEditar ? null : "disabled";
 }
-<h1 class="h3 mb-3">@ViewData["Title"]</h1>
-@if (!Model.PodeEditar) { <p class="aviso-ok" role="status">Seu perfil só consulta. Para alterar, peça a um administrador.</p> }
+<div class="topo-pagina">
+    <div>
+        <p><a asp-page="Index">Voltar para os programas</a></p>
+        <h1>@ViewData["Title"]</h1>
+    </div>
+</div>
+@if (!Model.PodeEditar) { <p class="somente">Os cadastros são mantidos pelo perfil Administrador. Você pode consultar, mas não alterar.</p> }
 @if (Model.Erros.Count > 0)
 {
-    <div class="aviso-erro mb-3" role="alert">
+    <div class="aviso-erro resumo-erros" role="alert">
         <strong>Corrija os campos indicados.</strong>
-        <ul class="mb-0">@foreach (var e in Model.Erros) { <li><a href="#Form_@e.Key">@e.Value</a></li> }</ul>
+        <ul>@foreach (var e in Model.Erros) { <li><a href="#Form_@e.Key">@e.Value</a></li> }</ul>
     </div>
 }
-<form method="post" novalidate class="cartao p-4" style="max-width: 40rem">
-    <fieldset @dis>
-        <div class="mb-3">
+<form method="post" novalidate>
+    <fieldset @dis class="cartao bloco" style="max-width: 560px">
+        <div class="campo">
             <label class="form-label" for="Form_Nome">Nome</label>
             <input class="form-control" id="Form_Nome" name="Form.Nome" value="@Model.Form.Nome" maxlength="100" required aria-invalid="@Model.Invalido("Nome")" aria-describedby="e-Nome" />
             <div class="erro-campo" id="e-Nome">@Model.Erro("Nome")</div>
         </div>
-        <div class="mb-3">
-            <label class="form-label" for="Form_Descricao">Descrição</label>
+        <div class="campo">
+            <label class="form-label" for="Form_Descricao">Descrição <span class="ajuda">(até 600 caracteres)</span></label>
             <textarea class="form-control" id="Form_Descricao" name="Form.Descricao" rows="3" maxlength="600" aria-invalid="@Model.Invalido("Descricao")" aria-describedby="e-Descricao">@Model.Form.Descricao</textarea>
             <div class="erro-campo" id="e-Descricao">@Model.Erro("Descricao")</div>
         </div>
-        <div class="mb-3">
+        <div class="campo">
             <label class="form-label" for="Form_PublicoAlvo">Público-alvo</label>
             <input class="form-control" id="Form_PublicoAlvo" name="Form.PublicoAlvo" value="@Model.Form.PublicoAlvo" maxlength="200" aria-invalid="@Model.Invalido("PublicoAlvo")" aria-describedby="e-PublicoAlvo" />
             <div class="erro-campo" id="e-PublicoAlvo">@Model.Erro("PublicoAlvo")</div>
         </div>
+        @if (Model.PodeEditar)
+        {
+            <div class="rodape-form">
+                <a class="btn btn-sec" asp-page="Index">Cancelar</a>
+                <button class="btn btn-primary" type="submit">Salvar programa</button>
+            </div>
+        }
     </fieldset>
-    @if (Model.PodeEditar) { <button class="btn btn-primary" type="submit">Salvar</button> }
-    <a class="btn btn-neutro" asp-page="Index">Voltar à lista</a>
+    @if (!Model.PodeEditar) { <a class="btn btn-sec" asp-page="Index">Voltar à lista</a> }
 </form>

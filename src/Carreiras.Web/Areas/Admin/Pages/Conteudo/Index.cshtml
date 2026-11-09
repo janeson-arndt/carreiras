@@ -1,60 +1,67 @@
 @page "/admin/conteudo"
 @model Carreiras.Web.Areas.Admin.Pages.Conteudo.IndexModel
 @{
-    ViewData["Title"] = "Conteúdo do portal";
+    ViewData["Title"] = "Conteúdo da vitrine";
     ViewData["Menu"] = "conteudo";
-    string Resumo(string t) => t.Length <= 140 ? t : t[..140].TrimEnd() + "…";
+    string Resumo(string t) => t.Length <= 110 ? t : t[..110].TrimEnd() + "...";
 }
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h3 mb-0">Conteúdo do portal</h1>
+<div class="topo-pagina">
+    <div>
+        <h1>Conteúdo da vitrine</h1>
+        <p>Textos institucionais exibidos no portal público.</p>
+    </div>
     @if (Model.PodeEditar)
     {
         <a class="btn btn-primary" asp-page="Editar">Novo conteúdo</a>
     }
 </div>
-<p class="text-secundario">Textos institucionais que aparecem no portal público. Só o que está publicado é exibido.</p>
 @if (!Model.PodeEditar)
 {
-    <p class="text-secundario">Seu perfil só consulta os cadastros. Para alterar, peça a um administrador.</p>
+    <p class="somente">Os cadastros são mantidos pelo perfil Administrador. Você pode consultar, mas não alterar.</p>
 }
 @if (Model.Itens.Count == 0)
 {
-    <div class="cartao p-4 text-center">Nenhum conteúdo cadastrado.</div>
+    <div class="cartao vazio"><p>Nenhum conteúdo cadastrado.</p></div>
 }
 else
 {
 <div class="cartao">
-    <div class="table-responsive" style="overflow: visible">
-    <table class="table align-middle mb-0 tabela-cartoes" role="table">
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Conteúdos da vitrine (use as setas para rolar a tabela)">
+    <table class="table tabela-cartoes" role="table">
         <caption class="visually-hidden">Conteúdos institucionais</caption>
-        <thead><tr role="row"><th role="columnheader" scope="col">Conteúdo</th><th role="columnheader" scope="col">Seção</th><th role="columnheader" scope="col">Ordem</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col" class="text-end">Ações</th></tr></thead>
+        <thead><tr role="row"><th role="columnheader" scope="col">Seção</th><th role="columnheader" scope="col">Texto</th><th role="columnheader" scope="col">No portal</th><th role="columnheader" scope="col">Ações</th></tr></thead>
         <tbody>
         @foreach (var c in Model.Itens)
         {
             <tr role="row">
-                <td role="cell"><strong>@c.Titulo</strong>@if (c.Ficticio) { <span class="etiqueta exemplo ms-1">exemplo</span> }<br /><small class="text-secundario">@Resumo(c.Texto)</small></td>
-                <td role="cell" data-rotulo="Seção"><code>@c.Secao</code></td>
-                <td role="cell" data-rotulo="Ordem">@c.Ordem</td>
-                <td role="cell" data-rotulo="Situação"><span class="etiqueta @(c.Publicado ? "" : "inativo")">@(c.Publicado ? "Publicado" : "Despublicado")</span></td>
-                <td role="cell" class="text-end text-nowrap">
-                    <a class="btn btn-sm btn-primary" asp-page="Editar" asp-route-id="@c.Id">@(Model.PodeEditar ? "Editar" : "Ver")</a>
+                <td role="cell"><strong>@c.Titulo</strong><div class="ajuda">@c.Secao</div></td>
+                <td role="cell" data-rotulo="Texto">@Resumo(c.Texto)</td>
+                <td role="cell" data-rotulo="No portal">@(c.Publicado ? "Publicado" : "Oculto")</td>
+                <td role="cell">
                     @if (Model.PodeEditar)
                     {
-                        <div class="acoes">
-                            <button type="button" class="btn btn-sm btn-neutro" data-acoes aria-expanded="false" aria-controls="acoes-@c.Id">Ações</button>
-                            <div class="acoes-lista text-start" id="acoes-@c.Id" hidden>
-                                @if (c.Publicado)
-                                {
-                                    <form method="post" asp-page-handler="Publicar" asp-route-id="@c.Id" asp-route-publicado="false">
-                                        <button type="submit" class="perigo" data-confirmar="Despublicar @c.Titulo? Ele sai do portal público.">Despublicar</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form method="post" asp-page-handler="Publicar" asp-route-id="@c.Id" asp-route-publicado="true"><button type="submit">Publicar</button></form>
-                                }
+                        <div class="acoes-linha">
+                            <a class="btn btn-sec btn-peq" asp-page="Editar" asp-route-id="@c.Id">Editar texto</a>
+                            <div class="acoes">
+                                <button type="button" class="btn btn-sec btn-peq" data-acoes aria-expanded="false" aria-controls="acoes-@c.Id" aria-label="Mais ações para @c.Titulo">Ações <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></button>
+                                <div class="acoes-lista" id="acoes-@c.Id" hidden>
+                                    @if (c.Publicado)
+                                    {
+                                        <form method="post" asp-page-handler="Publicar" asp-route-id="@c.Id" asp-route-publicado="false">
+                                            <button type="submit" class="perigo" data-confirmar="Despublicar @c.Titulo? Ele sai do portal público.">Despublicar</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="Publicar" asp-route-id="@c.Id" asp-route-publicado="true"><button type="submit">Publicar</button></form>
+                                    }
+                                </div>
                             </div>
                         </div>
+                    }
+                    else
+                    {
+                        <a asp-page="Editar" asp-route-id="@c.Id" aria-label="Ver @c.Titulo">Ver</a>
                     }
                 </td>
             </tr>

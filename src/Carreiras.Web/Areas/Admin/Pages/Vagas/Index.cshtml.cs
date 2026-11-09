@@ -21,7 +21,8 @@ public class IndexModel : PageModel
 
     public List<VagaLinha> Itens { get; private set; } = new();
     public List<Unidade> Unidades { get; private set; } = new();
-    public bool PodeGerenciar => User.IsInRole(Perfis.Administrador) || User.IsInRole(Perfis.Analista);
+    public bool FiltroAtivo => !string.IsNullOrWhiteSpace(Busca) || !string.IsNullOrWhiteSpace(Status) || UnidadeId.HasValue;
+    public bool PodeGerenciar =>User.IsInRole(Perfis.Administrador) || User.IsInRole(Perfis.Analista);
 
     public async Task OnGetAsync()
     {

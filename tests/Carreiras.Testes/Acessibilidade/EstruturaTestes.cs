@@ -82,13 +82,24 @@ public class EstruturaTestes : IDisposable
             if (string.IsNullOrWhiteSpace(n.GetAttribute("aria-label")) && string.IsNullOrWhiteSpace(n.GetAttribute("aria-labelledby")))
                 Falha("nav sem aria-label");
 
+        // marcos "complementares" (<aside>) precisam de nome próprio e único (axe: landmark-unique)
+        var asides = doc.QuerySelectorAll("aside").ToList();
+        if (asides.Count > 0)
+        {
+            var nomes = asides.Select(a => (a.GetAttribute("aria-label") ?? "").Trim()).ToList();
+            if (nomes.Any(string.IsNullOrEmpty)) Falha("aside sem aria-label");
+            else if (nomes.Distinct(StringComparer.CurrentCultureIgnoreCase).Count() != nomes.Count) Falha("aside com nome repetido");
+        }
+
         // campos de formulário: todos com rótulo
         foreach (var campo in doc.QuerySelectorAll("input, select, textarea"))
         {
             var tipo = (campo.GetAttribute("type") ?? "text").ToLowerInvariant();
             if (tipo is "hidden" or "submit" or "button") continue;
             var id = campo.Id;
-            var temLabel = !string.IsNullOrEmpty(id) && doc.QuerySelector($"label[for='{id}']") != null;
+            // rótulo por "for" ou por envolvimento (<label><input> texto</label>), os dois dão nome acessível
+            var temLabel = (!string.IsNullOrEmpty(id) && doc.QuerySelector($"label[for='{id}']") != null)
+                           || (campo.Closest("label") is { } envolvente && !string.IsNullOrWhiteSpace(envolvente.TextContent));
             var temAria = !string.IsNullOrWhiteSpace(campo.GetAttribute("aria-label")) || !string.IsNullOrWhiteSpace(campo.GetAttribute("aria-labelledby"));
             if (!temLabel && !temAria) Falha($"campo sem rótulo: <{campo.TagName.ToLower()} name={campo.GetAttribute("name")} id={id}>");
         }
@@ -221,6 +232,68 @@ public class EstruturaTestes : IDisposable
         var hrefs = doc.QuerySelectorAll(".aviso-erro a").Select(a => a.GetAttribute("href")!.TrimStart('#')).ToList();
         Assert.NotEmpty(hrefs);
         Assert.All(hrefs, h => Assert.NotNull(doc.GetElementById(h)));
+    }
+
+    [Theory]
+    [InlineData("/admin/beneficios")]
+    [InlineData("/admin/programas")]
+    [InlineData("/admin/conteudo")]
+    [InlineData("/admin/vagas/editar/1")]
+    public async Task Etiqueta_exemplo_nao_aparece_no_portal_do_RH(string url)
+    {
+        // decisão do dono do produto: sem a etiqueta "exemplo" (a marca Ficticio continua só no banco)
+        var c = await AdminAsync();
+        var html = await (await c.GetAsync(url)).Content.ReadAsStringAsync();
+        // só a etiqueta some; "(exemplo)" dentro do nome de um item do seed é dado e não é tocado
+        Assert.DoesNotContain("etiqueta exemplo", html);
+        Assert.DoesNotMatch(@">exemplo</span>", html);
+    }
+
+    [Fact]
+    public async Task Cabecalho_tem_a_logo_e_a_conta_do_usuario_como_no_prototipo()
+    {
+        var c = await AdminAsync();
+        var doc = await Abrir(await (await c.GetAsync("/admin/vagas")).Content.ReadAsStringAsync());
+
+        // logo na marca, com texto alternativo e servida de verdade como imagem
+        var logo = doc.QuerySelector(".admin-marca img.admin-logo");
+        Assert.NotNull(logo);
+        Assert.False(string.IsNullOrWhiteSpace(logo!.GetAttribute("alt")));
+        Assert.False(string.IsNullOrEmpty(logo.GetAttribute("width")) || string.IsNullOrEmpty(logo.GetAttribute("height")));   // evita "pulo" de layout
+        var resp = await c.GetAsync(logo.GetAttribute("src")!);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+        Assert.Equal("image/png", resp.Content.Headers.ContentType!.MediaType);
+
+        // conta: botão próprio (sem as classes de botão com borda), avatar, nome, perfil por extenso e seta
+        var conta = doc.QuerySelector("button.conta-btn[data-acoes]");
+        Assert.NotNull(conta);
+        Assert.DoesNotContain("btn-neutro", conta!.ClassName);
+        Assert.NotNull(conta.QuerySelector(".iniciais"));
+        Assert.Equal("Administrador", conta.QuerySelector(".conta-txt small")!.TextContent);   // não "ADMINISTRADOR"
+        Assert.NotNull(conta.QuerySelector("svg"));
+        Assert.StartsWith("Conta de ", conta.GetAttribute("aria-label"));
+        Assert.Empty(Verificar(doc));
+
+        // a tela de entrada também leva a logo
+        var entrada = await Abrir(await (await Novo().GetAsync("/admin/entrar")).Content.ReadAsStringAsync());
+        Assert.NotNull(entrada.QuerySelector(".admin-marca img.admin-logo[alt]"));
+    }
+
+    [Fact]
+    public void Botao_da_conta_nao_tem_borda_visivel_ate_o_mouse_passar()
+    {
+        var css = File.ReadAllText(Caminho("src/Carreiras.Web/wwwroot/css/carreiras.css"));
+        var bloco = Regex.Match(css, @"\.conta-btn\s*\{([^}]*)\}").Groups[1].Value;
+        Assert.Contains("border: 1px solid transparent", bloco);
+        Assert.Matches(@"\.conta-btn:hover\s*\{[^}]*border-color", css);
+        Assert.Matches(@"\.iniciais\s*\{[^}]*border-radius: 50%", css);   // avatar redondo
+    }
+
+    private static string Caminho(string relativo)
+    {
+        var d = new DirectoryInfo(AppContext.BaseDirectory);
+        while (d != null && !File.Exists(Path.Combine(d.FullName, relativo))) d = d.Parent;
+        return d == null ? throw new FileNotFoundException(relativo) : Path.Combine(d.FullName, relativo);
     }
 
     [Fact]

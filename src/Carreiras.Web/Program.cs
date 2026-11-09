@@ -44,7 +44,9 @@ builder.Services.ConfigureApplicationCookie(o =>
 {
     o.LoginPath = "/admin/entrar";
     o.AccessDeniedPath = "/admin/acesso-negado";
-    o.Cookie.Name = "carreiras.rh";
+    // Nome próprio da sessão: cookies antigos (de quando o site ficava na raiz, Path=/) têm o mesmo caminho-pai e,
+    // com o mesmo nome, o navegador mandaria os dois e o servidor leria o velho (carimbo inválido), derrubando o login.
+    o.Cookie.Name = "carreiras.rh.sessao";
     o.Cookie.HttpOnly = true;
     o.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     o.Cookie.SameSite = SameSiteMode.Lax;

@@ -5,58 +5,67 @@
     ViewData["Menu"] = "conteudo";
     var dis = Model.PodeEditar ? null : "disabled";
 }
-<h1 class="h3 mb-3">@ViewData["Title"]</h1>
-@if (!Model.PodeEditar) { <p class="aviso-ok" role="status">Seu perfil só consulta. Para alterar, peça a um administrador.</p> }
+<div class="topo-pagina">
+    <div>
+        <p><a asp-page="Index">Voltar para o conteúdo da vitrine</a></p>
+        <h1>@(Model.Existente && !string.IsNullOrWhiteSpace(Model.Form.Titulo) ? "Editar: " + Model.Form.Titulo : ViewData["Title"])</h1>
+    </div>
+</div>
+@if (!Model.PodeEditar) { <p class="somente">Os cadastros são mantidos pelo perfil Administrador. Você pode consultar, mas não alterar.</p> }
 @if (Model.Erros.Count > 0)
 {
-    <div class="aviso-erro mb-3" role="alert">
+    <div class="aviso-erro resumo-erros" role="alert">
         <strong>Corrija os campos indicados.</strong>
-        <ul class="mb-0">@foreach (var e in Model.Erros) { <li><a href="#Form_@e.Key">@e.Value</a></li> }</ul>
+        <ul>@foreach (var e in Model.Erros) { <li><a href="#Form_@e.Key">@e.Value</a></li> }</ul>
     </div>
 }
-<form method="post" novalidate class="cartao p-4" style="max-width: 46rem">
-    <fieldset @dis>
-        <div class="mb-3">
+<form method="post" novalidate>
+    <fieldset @dis class="cartao bloco" style="max-width: 720px">
+        <div class="campo">
             <label class="form-label" for="Form_Secao">Seção</label>
             @if (Model.Existente)
             {
                 <input class="form-control" id="Form_Secao" value="@Model.Form.Secao" readonly aria-describedby="dica-secao" />
-                <div class="form-text" id="dica-secao">A seção não muda depois de criada: o portal público usa esse nome para achar o texto.</div>
+                <div class="ajuda" id="dica-secao">A seção não muda depois de criada: o portal público usa esse nome para achar o texto.</div>
             }
             else
             {
                 <input class="form-control" id="Form_Secao" name="Form.Secao" value="@Model.Form.Secao" maxlength="40" placeholder="quem-somos" required aria-invalid="@Model.Invalido("Secao")" aria-describedby="dica-secao e-Secao" />
-                <div class="form-text" id="dica-secao">Letras minúsculas sem acento, números e hífen. Não poderá ser trocada depois.</div>
+                <div class="ajuda" id="dica-secao">Letras minúsculas sem acento, números e hífen. Não poderá ser trocada depois.</div>
                 <div class="erro-campo" id="e-Secao">@Model.Erro("Secao")</div>
             }
         </div>
-        <div class="mb-3">
+        <div class="campo">
             <label class="form-label" for="Form_Titulo">Título</label>
             <input class="form-control" id="Form_Titulo" name="Form.Titulo" value="@Model.Form.Titulo" maxlength="120" required aria-invalid="@Model.Invalido("Titulo")" aria-describedby="e-Titulo" />
             <div class="erro-campo" id="e-Titulo">@Model.Erro("Titulo")</div>
         </div>
-        <div class="mb-3">
+        <div class="campo">
             <label class="form-label" for="Form_Texto">Texto</label>
-            <textarea class="form-control" id="Form_Texto" name="Form.Texto" rows="8" required aria-invalid="@Model.Invalido("Texto")" aria-describedby="e-Texto">@Model.Form.Texto</textarea>
+            <textarea class="form-control" id="Form_Texto" name="Form.Texto" rows="8" style="min-height: 170px" required aria-invalid="@Model.Invalido("Texto")" aria-describedby="e-Texto">@Model.Form.Texto</textarea>
             <div class="erro-campo" id="e-Texto">@Model.Erro("Texto")</div>
         </div>
-        <div class="mb-3" style="max-width: 10rem">
+        <div class="campo" style="max-width: 10rem">
             <label class="form-label" for="Form_Ordem">Ordem</label>
             <input class="form-control" id="Form_Ordem" name="Form.Ordem" type="number" min="0" max="9999" value="@Model.Form.Ordem" aria-invalid="@Model.Invalido("Ordem")" aria-describedby="e-Ordem" />
             <div class="erro-campo" id="e-Ordem">@Model.Erro("Ordem")</div>
         </div>
-        <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="Form_Publicado" name="Form.Publicado" value="true" checked="@Model.Form.Publicado" />
-            <label class="form-check-label" for="Form_Publicado">Publicado no portal</label>
-            <input type="hidden" name="Form.Publicado" value="false" />
-        </div>
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="Form_Ficticio" name="Form.Ficticio" value="true" checked="@Model.Form.Ficticio" aria-describedby="dica-ficticio" />
-            <label class="form-check-label" for="Form_Ficticio">Texto de exemplo</label>
-            <input type="hidden" name="Form.Ficticio" value="false" />
-            <div class="form-text" id="dica-ficticio">Desmarque quando o texto for o definitivo da empresa. Textos de exemplo levam a etiqueta "exemplo" aqui no portal do RH.</div>
-        </div>
+        <label class="check" for="Form_Publicado">
+            <input type="checkbox" id="Form_Publicado" name="Form.Publicado" value="true" checked="@Model.Form.Publicado" /> Publicado no portal
+        </label>
+        <input type="hidden" name="Form.Publicado" value="false" />
+        <label class="check" for="Form_Ficticio">
+            <input type="checkbox" id="Form_Ficticio" name="Form.Ficticio" value="true" checked="@Model.Form.Ficticio" aria-describedby="dica-ficticio" /> Texto de exemplo
+        </label>
+        <input type="hidden" name="Form.Ficticio" value="false" />
+        <p class="ajuda" id="dica-ficticio">Marca interna: indica que o texto ainda é um modelo e precisa ser revisado antes de ir ao ar. Desmarque quando for o definitivo da empresa.</p>
+        @if (Model.PodeEditar)
+        {
+            <div class="rodape-form">
+                <a class="btn btn-sec" asp-page="Index">Cancelar</a>
+                <button class="btn btn-primary" type="submit">Salvar texto</button>
+            </div>
+        }
     </fieldset>
-    @if (Model.PodeEditar) { <button class="btn btn-primary" type="submit">Salvar</button> }
-    <a class="btn btn-neutro" asp-page="Index">Voltar à lista</a>
+    @if (!Model.PodeEditar) { <a class="btn btn-sec" asp-page="Index">Voltar à lista</a> }
 </form>
