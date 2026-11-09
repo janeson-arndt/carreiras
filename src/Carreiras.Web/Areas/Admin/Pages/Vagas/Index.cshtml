@@ -81,7 +81,7 @@ else
                 <td role="cell" data-rotulo="Unidade">@v.Unidade</td>
                 <td role="cell" data-rotulo="Turno">@v.Turno</td>
                 <td role="cell" data-rotulo="Status"><span class="selo s-@v.Status">@Rotulo(v.Status)</span></td>
-                <td role="cell" data-rotulo="Candidaturas">@v.Candidaturas</td>
+                <td role="cell" data-rotulo="Candidaturas">@if (v.Candidaturas > 0) { <a asp-page="/Candidaturas/Index" asp-route-vaga="@v.Id" aria-label="Ver as @v.Candidaturas candidaturas de @v.Titulo">@v.Candidaturas</a> } else { @v.Candidaturas }</td>
                 <td role="cell" data-rotulo="Atualizada">@v.AtualizadaEm.ToLocalTime().ToString("dd/MM/yyyy")</td>
                 <td role="cell">
                     <div class="acoes-linha">

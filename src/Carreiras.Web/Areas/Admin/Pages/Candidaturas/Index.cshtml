@@ -1,0 +1,114 @@
+@page "/admin/candidaturas"
+@model Carreiras.Web.Areas.Admin.Pages.Candidaturas.IndexModel
+@using Carreiras.Dominio.Candidaturas
+@{
+    ViewData["Title"] = "Candidaturas";
+    ViewData["Menu"] = "candidaturas";
+    var br = new System.Globalization.CultureInfo("pt-BR");
+}
+<div class="topo-pagina">
+    <div>
+        <h1>Candidaturas</h1>
+        <p>Acompanhe os currículos recebidos, por vaga e por situação.</p>
+    </div>
+</div>
+@if (!Model.PodeGerenciar)
+{
+    <p class="somente">Seu perfil só consulta. A situação das candidaturas está bloqueada.</p>
+}
+
+<form method="get" class="filtros" role="search">
+    <div>
+        <label class="form-label" for="vaga">Vaga</label>
+        <select class="form-select" id="vaga" name="vaga">
+            <option value="">Todas</option>
+            <option value="espontanea" selected="@(Model.Vaga == "espontanea")">Candidaturas espontâneas (@Model.Espontaneas)</option>
+            @foreach (var v in Model.Vagas)
+            {
+                <option value="@v.Id" selected="@(Model.Vaga == v.Id.ToString())">@v.Titulo (@v.Candidaturas)</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label class="form-label" for="status">Situação</label>
+        <select class="form-select" id="status" name="status">
+            <option value="">Todas</option>
+            @foreach (var s in StatusCandidatura.Todos)
+            {
+                <option value="@s" selected="@(Model.Status == s)">@StatusCandidatura.Rotulo(s)</option>
+            }
+        </select>
+    </div>
+    <button class="btn btn-sec" type="submit">Filtrar</button>
+</form>
+
+@if (Model.Itens.Count == 0)
+{
+    <div class="cartao vazio">
+        @if (Model.FiltroAtivo)
+        {
+            <p>Nenhuma candidatura com esses filtros.</p>
+            <a class="btn btn-sec" asp-page="Index">Limpar filtros</a>
+        }
+        else
+        {
+            <p>Nenhuma candidatura confirmada ainda.</p>
+        }
+    </div>
+}
+else
+{
+    <p class="contagem" aria-live="polite">@Model.Total @(Model.Total == 1 ? "candidatura" : "candidaturas")</p>
+    <div class="cartao">
+        <div class="table-responsive" tabindex="0" role="region" aria-label="Candidaturas (use as setas para rolar a tabela)">
+        <table class="table tabela-cartoes" role="table">
+            <caption class="visually-hidden">Candidaturas recebidas</caption>
+            <thead>
+                <tr role="row"><th role="columnheader" scope="col">Candidato</th><th role="columnheader" scope="col">Vaga</th><th role="columnheader" scope="col">Pretensão</th><th role="columnheader" scope="col">Recebida em</th><th role="columnheader" scope="col">Situação</th><th role="columnheader" scope="col">Detalhes</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var c in Model.Itens)
+            {
+                <tr role="row">
+                    <td role="cell"><strong>@c.Candidato</strong></td>
+                    <td role="cell" data-rotulo="Vaga">@(c.VagaTitulo ?? "Candidatura espontânea")</td>
+                    <td role="cell" data-rotulo="Pretensão">@(c.Pretensao == null ? "-" : c.Pretensao.Value.ToString("C", br))</td>
+                    <td role="cell" data-rotulo="Recebida em">@c.CriadaEm.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                    <td role="cell" data-rotulo="Situação">
+                        @if (Model.PodeGerenciar)
+                        {
+                            <form method="post" asp-page-handler="Status" asp-route-id="@c.Id" class="form-status">
+                                <input type="hidden" name="Vaga" value="@Model.Vaga" />
+                                <input type="hidden" name="Status" value="@Model.Status" />
+                                <input type="hidden" name="Pagina" value="@Model.Pagina" />
+                                <label class="visually-hidden" for="st-@c.Id">Situação de @c.Candidato</label>
+                                <select class="form-select" id="st-@c.Id" name="novo">
+                                    @foreach (var s in StatusCandidatura.Todos)
+                                    {
+                                        <option value="@s" selected="@(c.Status == s)">@StatusCandidatura.Rotulo(s)</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sec btn-peq">Salvar</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="selo s-@c.Status">@StatusCandidatura.Rotulo(c.Status)</span>
+                        }
+                    </td>
+                    <td role="cell"><a class="btn btn-sec btn-peq" asp-page="Detalhe" asp-route-id="@c.Id" aria-label="Ver detalhes de @c.Candidato">Ver</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    </div>
+    @if (Model.Paginas > 1)
+    {
+        <nav class="paginacao" aria-label="Páginas de candidaturas">
+            @if (Model.Pagina > 1) { <a class="btn btn-sec btn-peq" asp-page="Index" asp-route-vaga="@Model.Vaga" asp-route-status="@Model.Status" asp-route-pagina="@(Model.Pagina - 1)">Anterior</a> }
+            <span>Página @Model.Pagina de @Model.Paginas</span>
+            @if (Model.Pagina < Model.Paginas) { <a class="btn btn-sec btn-peq" asp-page="Index" asp-route-vaga="@Model.Vaga" asp-route-status="@Model.Status" asp-route-pagina="@(Model.Pagina + 1)">Próxima</a> }
+        </nav>
+    }
+}

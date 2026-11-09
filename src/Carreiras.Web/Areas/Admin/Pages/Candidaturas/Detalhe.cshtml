@@ -1,0 +1,88 @@
+@page "/admin/candidaturas/{id:int}"
+@model Carreiras.Web.Areas.Admin.Pages.Candidaturas.DetalheModel
+@using Carreiras.Dominio.Candidaturas
+@{
+    var c = Model.Candidatura;
+    ViewData["Title"] = c == null ? "Candidatura" : "Candidatura de " + c.Candidato;
+    ViewData["Menu"] = "candidaturas";
+    var br = new System.Globalization.CultureInfo("pt-BR");
+}
+@if (c != null)
+{
+    <p class="migalha"><a asp-page="Index">&larr; Voltar para as candidaturas</a></p>
+    <div class="topo-pagina">
+        <div>
+            <h1>@c.Candidato</h1>
+            <p>@(c.VagaTitulo ?? "Candidatura espontânea (banco de talentos)") &middot; recebida em @c.CriadaEm.ToLocalTime().ToString("dd/MM/yyyy")</p>
+        </div>
+        <span class="selo s-@c.Status">@StatusCandidatura.Rotulo(c.Status)</span>
+    </div>
+
+    <div class="cartao bloco">
+        <h2>Dados do candidato</h2>
+        <dl class="det">
+            <dt>Vaga</dt><dd>@(c.VagaTitulo ?? "Candidatura espontânea (banco de talentos)")</dd>
+            @if (c.Anonimizado)
+            {
+                <dt>Dados pessoais</dt><dd>Removidos na anonimização (pedido do titular ou fim do prazo de retenção).</dd>
+            }
+            else
+            {
+                <dt>E-mail</dt><dd>@c.Email</dd>
+                <dt>Telefone</dt><dd>@(c.Telefone ?? "-")</dd>
+                <dt>Cidade</dt><dd>@(c.Cidade == null ? "-" : c.Cidade + " (" + c.Uf + ")")</dd>
+            }
+            <dt>Pretensão salarial</dt><dd>@(c.Pretensao == null ? "-" : c.Pretensao.Value.ToString("C", br))</dd>
+            <dt>Currículo</dt>
+            <dd>
+                @if (c.CurriculoDisponivel)
+                {
+                    <a asp-page="Detalhe" asp-page-handler="Curriculo" asp-route-id="@c.Id">@c.CurriculoNome</a> <span class="ajuda">(@c.CurriculoKb KB, abre como download)</span>
+                }
+                else if (c.Anonimizado)
+                {
+                    <span>Arquivo removido na anonimização.</span>
+                }
+                else
+                {
+                    <span>Arquivo indisponível.</span>
+                }
+            </dd>
+        </dl>
+    </div>
+
+    <div class="cartao bloco">
+        <h2>Situação</h2>
+        @if (Model.PodeGerenciar)
+        {
+            <form method="post" asp-page-handler="Status" asp-route-id="@c.Id" class="form-status">
+                <label class="form-label" for="novo">Mudar a situação para</label>
+                <select class="form-select" id="novo" name="novo">
+                    @foreach (var s in StatusCandidatura.Todos)
+                    {
+                        <option value="@s" selected="@(c.Status == s)">@StatusCandidatura.Rotulo(s)</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary">Salvar situação</button>
+            </form>
+        }
+        else
+        {
+            <p class="somente">Seu perfil só consulta. A situação está bloqueada.</p>
+        }
+    </div>
+
+    <div class="cartao bloco">
+        <h2>Histórico de situação</h2>
+        <ol class="hist-lista">
+            @foreach (var h in c.Historico)
+            {
+                <li><strong>@StatusCandidatura.Rotulo(h.Status)</strong>, @h.Em.ToLocalTime().ToString("dd/MM/yyyy HH:mm"), @(h.Por ?? "candidatura enviada")</li>
+            }
+        </ol>
+    </div>
+}
+else
+{
+    <h1>Candidatura não encontrada</h1>
+}

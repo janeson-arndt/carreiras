@@ -327,3 +327,17 @@ O portal é servido sob um prefixo configurável: `PathBase` (variável de ambie
 **Atendido, com teste (13 novos; suíte em 312):** os seis critérios da Entrega 05, mais antifalsificação, captcha, links vencidos/substituídos e verificação de estrutura. Navegador: axe-core sem violações novas em `/banco-de-talentos` e `/meus-dados` (só o botão primário, exceção já conhecida).
 
 **Pendências deliberadas:** o texto do termo ainda não menciona o banco de talentos nem o canal "Meus dados" de forma detalhada (revisão jurídica); a cópia vai em texto, sem anexar o currículo; o RH só vê candidaturas espontâneas na Entrega 06 (visão própria).
+
+## 18. Status da Entrega 06 (gestão de candidaturas pelo RH)
+
+**Rotas (área Admin, exigem login):** `/admin/candidaturas` (lista com filtros de vaga e situação, 50 por página), `/admin/candidaturas/{id}` (detalhe com histórico) e `/admin/candidaturas/{id}?handler=Curriculo` (download). Item "Candidaturas" no menu; na lista de vagas, o número de candidaturas virou link para a lista filtrada pela vaga.
+
+**Como é feito:** `CandidaturaRhServico` (EF, sem SQL puro) e `StatusCandidatura` (RECEBIDA, EM_ANALISE, ENTREVISTA, APROVADA, REPROVADA; o RH troca livremente, como no protótipo). A mudança de situação atualiza `Candidatura.Status` e grava `CandidaturaStatusHist` (usuário e data) na mesma transação; mesma situação ou valor inválido é recusado sem histórico. A lista tem filtro "Candidaturas espontâneas" (visão separada, `VagaId` nulo) e mostra "Anonimizado" no lugar do nome. O detalhe de anonimizado não mostra e-mail, telefone nem cidade, e o currículo não existe mais.
+
+**Currículo:** só usuário do RH autenticado abre (qualquer perfil, inclusive LEITURA, que consulta). Sai como anexo, com o tipo pelo nome gravado (.pdf/.docx), `Cache-Control: no-store`, e só pelo nome gerado (guid) validado por padrão em `ArmazenamentoCurriculos`; caminho adulterado, arquivo ausente, anonimizado ou removido dá 404. O log registra candidatura e usuário do RH, sem dado do candidato.
+
+**Perfis:** ADMINISTRADOR e ANALISTA mudam situação; LEITURA vê tudo, mas a lista e o detalhe não têm seletor, e o POST forçado vai para "acesso negado" (checado no servidor).
+
+**Atendido, com teste (15 novos; suíte em 327):** os seis critérios da Entrega 06, mais login obrigatório, antifalsificação, pretensão salarial visível só ao RH e verificação de estrutura. Navegador: axe-core sem violações novas (só o botão primário, exceção conhecida); troca de situação e download conferidos com dados de exemplo, depois removidos.
+
+**Pendências deliberadas:** não há busca por nome nem ordenação (a lista vem da mais recente); perguntas eliminatórias por vaga ficam fora (análise, seção 11); candidaturas não passam pela tela de Auditoria (o histórico de situação cumpre o papel); o download usa o rótulo do nome original do arquivo como nome sugerido.

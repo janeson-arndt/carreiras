@@ -28,6 +28,7 @@ public static class InfraServicos
         services.AddScoped<Candidaturas.CandidaturaServico>();
         services.AddScoped<Candidaturas.RetencaoServico>();
         services.AddScoped<Candidaturas.TitularServico>();
+        services.AddScoped<Candidaturas.CandidaturaRhServico>();
         return services;
     }
 }
