@@ -42,6 +42,11 @@
     if (aberto) { e.preventDefault(); fechar(aberto, true); }
   });
 
+  // Quando o foco sai do menu (Tab para fora), ele fecha: nunca fica um menu aberto sem foco.
+  document.addEventListener('focusin', function (e) {
+    if (!e.target.closest('.acoes')) fecharTodos(null);
+  });
+
   // Confirmação antes de ações destrutivas (ex.: desativar).
   document.addEventListener('submit', function (e) {
     var msg = e.submitter && e.submitter.getAttribute('data-confirmar');

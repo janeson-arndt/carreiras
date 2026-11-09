@@ -54,10 +54,14 @@ public sealed class GestaoUsuarios
     /// <summary>Motivo pelo qual desativar o usuário está bloqueado agora (ou null). Só para a interface; o servidor revalida.</summary>
     public static string? MotivoBloqueioDesativar(UsuarioItem alvo, int atorId, IReadOnlyCollection<UsuarioItem> todos)
     {
-        if (RegrasUsuario.EhProprio(atorId, alvo.Id)) return RegrasUsuario.MotivoProprio;
+        var proprio = RegrasUsuario.EhProprio(atorId, alvo.Id);
         var outros = todos.Count(u => u.Id != alvo.Id && u.Perfil == Perfis.Administrador && u.ConsegueEntrar);
-        return RegrasUsuario.PerderiaUltimoAdministrador(alvo.Perfil, alvo.ConsegueEntrar, outros)
-            ? RegrasUsuario.MotivoUltimoAdmin : null;
+        var ultimo = RegrasUsuario.PerderiaUltimoAdministrador(alvo.Perfil, alvo.ConsegueEntrar, outros);
+        // Quem consulta a lista é sempre um administrador que entra; por isso o "último" só aparece na própria linha,
+        // e aí os dois motivos valem juntos.
+        if (proprio && ultimo) return RegrasUsuario.MotivoProprio + " " + RegrasUsuario.MotivoUltimoAdmin;
+        if (proprio) return RegrasUsuario.MotivoProprio;
+        return ultimo ? RegrasUsuario.MotivoUltimoAdmin : null;
     }
 
     public async Task<Resultado> CadastrarAsync(

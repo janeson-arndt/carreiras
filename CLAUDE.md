@@ -248,3 +248,16 @@ dotnet test tests/Carreiras.Testes
 - O que depende de layout (contraste real, reflow no celular) foi conferido com **axe-core 4.10** no navegador, em 375 px e em desktop, com zero violações. Para repetir: `npm i axe-core` fora do repositório, copiar `axe.min.js` para um `wwwroot/lib/axe-temp/` temporário (a CSP só aceita scripts do próprio site), injetar com `<script src>` e rodar `axe.run()`; **remover a pasta antes do commit**.
 - Os únicos itens "incompletos" do axe são `<select>`/`<textarea>` (seta do Bootstrap é imagem de fundo); o texto é `#232323` sobre branco (16:1).
 - Listas do RH viram cartões empilhados abaixo de 768 px (`.tabela-cartoes` + `data-rotulo`, com papéis ARIA para manter a semântica de tabela). A Auditoria mantém tabela rolável, com `tabindex="0"`, `role="region"` e `aria-label`.
+
+## 14. Status da Entrega 02 (revisão contra os critérios)
+
+**Atendidos, com evidência automática ou verificada no navegador:** acesso só autenticado e por perfil; auditoria de status e de cada campo (usuário, tabela, campo, antigo, novo); duplicar e encerrada bloqueada; salvar sem mudança não grava log (inclusive com CRLF do navegador); campos obrigatórios no rascunho; menu Ações pelo teclado (Enter/Espaço abre, Esc devolve o foco, Tab para fora fecha, Encerrar separado e em vermelho); Usuários (lista, busca, filtro, cadastro sem senha, convite de uso único com prazo, reenvio, nova senha, desativar/reativar com sessões encerradas, bloqueio do próprio e do último administrador com a explicação visível, concorrência); auditoria sem senha, hash, link ou token; Benefícios, Programas, Conteúdo e Auditoria (RN13); acessibilidade (seção 13).
+
+**Desvios do protótipo (aceitos):** "Novo usuário" é uma página, não um diálogo.
+
+**Pendências conhecidas, deliberadas:**
+- "Vaga em rascunho não aparece no portal público" só pode ser verificado na Entrega 03 (RN03 vira teste lá).
+- A tela de Conteúdo não tem anexo de `Documento` (a tabela existe).
+- `Vaga` não tem coluna `Ficticio`: as vagas de exemplo do seed não ganham a etiqueta "exemplo" (decidir se vale uma migração).
+- Antes de publicar em HTTPS: `Cookie.SecurePolicy` está `SameAsRequest`; trocar para `Always`. O SMTP real ainda não foi configurado (em desenvolvimento o e-mail vai para `storage/emails`).
+- Decisão nº 8 do briefing fechada: os 13 ícones do seed existem no Bootstrap Icons 1.11.3.
