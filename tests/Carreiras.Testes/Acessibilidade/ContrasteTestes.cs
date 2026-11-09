@@ -152,6 +152,30 @@ public class ContrasteTestes
         Assert.True(checadas >= 10, $"esperava checar os títulos em verde da vitrine; só achei {checadas}");
     }
 
+    /// <summary>A faixa do alto da vaga é verde claro: link, título e etiquetas precisam passar de 4,5:1 sobre ela.</summary>
+    [Fact]
+    public void Faixa_da_vaga_em_verde_claro_mantem_o_contraste_do_texto()
+    {
+        var css = File.ReadAllText(Caminho("src/Carreiras.Web/wwwroot/css/vitrine.css"));
+        string Cor(string seletor, string propriedade)
+        {
+            var bloco = Regex.Match(css, Regex.Escape(seletor) + @"\s*\{([^}]*)\}");
+            Assert.True(bloco.Success, $"seletor não encontrado: {seletor}");
+            var v = Regex.Match(bloco.Groups[1].Value, @"(?<![-a-z])" + propriedade + @":\s*(#[0-9A-Fa-f]{6}|var\(--(c-[a-z-]+)\))");
+            Assert.True(v.Success, $"{seletor} não declara {propriedade}");
+            return v.Groups[2].Success && v.Groups[2].Length > 0 ? Token(v.Groups[2].Value) : v.Groups[1].Value;
+        }
+        var fundo = Cor(".faixa", "background");
+        Assert.Equal(Token("c-verde-claro"), fundo, ignoreCase: true);
+        foreach (var (seletor, quem) in new[] { (".faixa", "texto"), (".faixa a", "link"), (".faixa h1", "título") })
+        {
+            var r = Razao(Cor(seletor, "color"), fundo);
+            Assert.True(r >= 4.5, $"faixa da vaga, {quem}: {r:F2}:1 sobre o verde claro");
+        }
+        var etiqueta = Razao(Cor(".faixa .meta span", "color"), Cor(".faixa .meta span", "background"));
+        Assert.True(etiqueta >= 4.5, $"etiquetas da faixa: {etiqueta:F2}:1");
+    }
+
     [Theory]
     [InlineData("c-cinza")]
     public void Bordas_de_campos_tem_pelo_menos_3_para_1_sobre_branco(string token) =>

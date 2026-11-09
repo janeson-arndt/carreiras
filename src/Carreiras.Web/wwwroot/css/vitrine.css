@@ -139,10 +139,11 @@ a.vaga .ver { font-weight: 600; color: var(--c-verde-texto); }
 .duas p { margin: 0 0 8px; max-width: 60ch; }
 
 /* ---------- página da vaga ---------- */
-.faixa { background: var(--c-verde-hover); color: #FFFFFF; padding: 22px 0 60px; }
-.faixa a { color: #FFFFFF; }
-.faixa h1 { font-size: clamp(36px, 5vw, 58px); margin: 10px 0 12px; color: #FFFFFF; }
-.faixa .meta span { background: #FFFFFF; color: var(--c-texto); border-color: #FFFFFF; }
+/* Faixa do alto da vaga: verde claro com filete verde (leve); texto todo escuro para manter o contraste */
+.faixa { background: var(--c-verde-claro); color: var(--c-texto); padding: 22px 0 60px; border-bottom: 4px solid var(--c-verde); }
+.faixa a { color: var(--c-verde-escuro-hover); }
+.faixa h1 { font-size: clamp(36px, 5vw, 58px); margin: 10px 0 12px; color: var(--c-texto); }
+.faixa .meta span { background: #FFFFFF; color: var(--c-texto); border-color: var(--c-linha); }
 .det { display: grid; grid-template-columns: 1fr 320px; gap: 36px; margin-top: -36px; padding-bottom: 12px; }
 .corpo-vaga { background: #FFFFFF; border: 1px solid var(--c-linha); border-radius: 8px; padding: 8px 24px 24px; }
 .corpo-vaga h2 { font-size: 28px; margin: 22px 0 8px; color: var(--c-verde); }
