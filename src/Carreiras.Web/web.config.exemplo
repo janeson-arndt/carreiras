@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXEMPLO de web.config para publicar o Portal de Carreiras no IIS (ASP.NET Core Module, hospedagem em processo).
+
+  COMO USAR
+  1. Publique:  dotnet publish src/Carreiras.Web -c Release -o <pasta-do-site>
+  2. Copie este arquivo para <pasta-do-site>\web.config e troque os valores marcados com TROCAR.
+  3. No IIS, o pool de aplicativos deve ser "Sem código gerenciado" e a identidade precisa de LEITURA na pasta do site
+     e de ESCRITA nas pastas de currículos e de e-mails (veja Curriculos__Pasta abaixo).
+
+  ATENÇÃO COM SEGREDOS
+  - Este arquivo guarda senhas em TEXTO. Não o coloque no repositório com valores reais (aqui só há marcadores).
+  - No servidor, restrinja o acesso ao arquivo à conta de administração e à identidade do pool.
+  - Alternativa mais segura: definir estas mesmas chaves como variáveis de ambiente do pool (o nome com ":" vira "__").
+
+  O QUE NÃO ESTÁ AQUI (é código, não configuração)
+  - Cookie.SecurePolicy = Always e cabeçalhos encaminhados (UseForwardedHeaders) atrás de proxy reverso.
+-->
+<configuration>
+  <location path="." inheritInChildApplications="false">
+    <system.webServer>
+      <handlers>
+        <add name="aspNetCore" path="*" verb="*" modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+      </handlers>
+
+      <aspNetCore processPath="dotnet" arguments=".\Carreiras.Web.dll" stdoutLogEnabled="false" stdoutLogFile=".\logs\stdout"
+                  hostingModel="inprocess">
+        <environmentVariables>
+          <!-- Ambiente: Production desliga páginas de erro detalhadas e liga o HSTS. -->
+          <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
+
+          <!-- Banco de dados (SQL Server). TROCAR servidor, usuário e senha. -->
+          <environmentVariable name="ConnectionStrings__Carreiras"
+                               value="Server=DESKTOP-CEGRG24\DEVELOPER;Database=RH_METISA;User Id=TROCAR-USUARIO;Password=TROCAR-SENHA;TrustServerCertificate=True" />
+
+          <!-- Prefixo do site. Deixe vazio se o site ficar na raiz do domínio; use /rhmetisa se ficar em uma subpasta. -->
+          <environmentVariable name="PathBase" value="" />
+
+          <!-- Origem usada nos links dos e-mails (confirmação de candidatura e pedidos do titular). Sem barra no fim. -->
+          <environmentVariable name="Site__Origem" value="https://TROCAR-DOMINIO" />
+
+          <!-- E-mail (SMTP). Sem Email__Host os e-mails só são gravados em arquivo (uso de desenvolvimento). -->
+          <environmentVariable name="Email__Host" value="TROCAR-SMTP" />
+          <environmentVariable name="Email__Porta" value="587" />
+          <environmentVariable name="Email__UsarSsl" value="true" />
+          <environmentVariable name="Email__Usuario" value="TROCAR-USUARIO-SMTP" />
+          <environmentVariable name="Email__Senha" value="TROCAR-SENHA-SMTP" />
+          <environmentVariable name="Email__De" value="carreiras@TROCAR-DOMINIO" />
+
+          <!-- Currículos: pasta FORA da pasta do site, com escrita para a identidade do pool. Nunca dentro de wwwroot. -->
+          <environmentVariable name="Curriculos__Pasta" value="C:\dados\carreiras\curriculos" />
+
+          <!-- Rotina diária de privacidade (anonimiza prazo vencido e apaga os arquivos). Ligue em UM só servidor. -->
+          <environmentVariable name="Retencao__Habilitado" value="true" />
+
+          <!-- Limite de tentativas por IP nas telas públicas (padrão: 10 a cada 10 minutos). -->
+          <environmentVariable name="RateLimit__Tentativas" value="10" />
+          <environmentVariable name="RateLimit__JanelaMinutos" value="10" />
+
+          <!-- Privacidade: e-mail do encarregado e confirmação de que o jurídico revisou o termo. -->
+          <environmentVariable name="Privacidade__EmailEncarregado" value="TROCAR-EMAIL-DO-ENCARREGADO" />
+          <environmentVariable name="Privacidade__RevisadoPeloJuridico" value="false" />
+
+          <!-- Aviso "Ambiente de avaliação": mude para false só depois de trocar logo e fotos por material liberado. -->
+          <environmentVariable name="Vitrine__AvisoAvaliacao" value="true" />
+        </environmentVariables>
+      </aspNetCore>
+
+      <security>
+        <requestFiltering>
+          <!-- Currículo de até 5 MB + campos do formulário: 8 MB, igual ao limite da aplicação. -->
+          <requestLimits maxAllowedContentLength="8388608" />
+        </requestFiltering>
+      </security>
+    </system.webServer>
+  </location>
+</configuration>
