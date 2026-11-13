@@ -51,6 +51,30 @@ public sealed class ReferenciaEnvio
     }
 }
 
+/// <summary>
+/// Referência assinada e com validade ao currículo guardado quando o envio volta com críticas: nome do arquivo
+/// guardado + nome original (só para exibir). Vai num campo oculto; ninguém consegue apontar para outro arquivo.
+/// </summary>
+public sealed class ReferenciaRascunho
+{
+    private readonly ITimeLimitedDataProtector _p;
+    public ReferenciaRascunho(IDataProtectionProvider dp) =>
+        _p = dp.CreateProtector("carreiras.rascunho-curriculo").ToTimeLimitedDataProtector();
+
+    public string Criar(string arquivo, string nomeOriginal) => _p.Protect($"{arquivo}|{nomeOriginal}", Carreiras.Infra.Candidaturas.RascunhoCurriculos.Validade);
+
+    public (string Arquivo, string NomeOriginal)? Ler(string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return null;
+        try
+        {
+            var partes = _p.Unprotect(token).Split('|', 2);
+            return partes.Length == 2 ? (partes[0], partes[1]) : null;
+        }
+        catch (System.Security.Cryptography.CryptographicException) { return null; }
+    }
+}
+
 public sealed class LimiteOpcoes
 {
     public int Tentativas { get; set; } = 10;

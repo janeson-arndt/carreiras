@@ -341,3 +341,15 @@ O portal é servido sob um prefixo configurável: `PathBase` (variável de ambie
 **Atendido, com teste (15 novos; suíte em 327):** os seis critérios da Entrega 06, mais login obrigatório, antifalsificação, pretensão salarial visível só ao RH e verificação de estrutura. Navegador: axe-core sem violações novas (só o botão primário, exceção conhecida); troca de situação e download conferidos com dados de exemplo, depois removidos.
 
 **Pendências deliberadas:** não há busca por nome nem ordenação (a lista vem da mais recente); perguntas eliminatórias por vaga ficam fora (análise, seção 11); candidaturas não passam pela tela de Auditoria (o histórico de situação cumpre o papel); o download usa o rótulo do nome original do arquivo como nome sugerido.
+
+## 19. Ajustes no formulario de candidatura (pos-Entrega 06)
+
+**Telefone:** mascara (47) 99999-9999 / (47) 3333-4444 em `candidatar.js` (aceita colar com +55; o servidor continua aceitando 10 a 13 digitos, formatados ou nao).
+
+**Cidade:** sugestoes (`datalist`) a partir de `wwwroot/data/municipios.json` (5.570 municipios por UF, gerado da tabela Municipio do banco do BRC, codigo IBGE; servido pelo proprio site por causa do CSP `script-src/connect-src self`). Com o estado escolhido lista os da UF; sem estado, procura em todos a partir de 3 letras e, se o nome existir em um so estado, preenche a UF. Texto livre continua valendo (sem a lista o campo segue normal).
+
+**Curriculo mantido:** o navegador nao devolve o arquivo escolhido quando a tela volta com criticas. Agora o arquivo que passou na validacao (tipo e tamanho) fica em `Curriculos:Pasta/rascunho` (`RascunhoCurriculos`, nome guid, fora do wwwroot), a tela mostra "Arquivo mantido: nome" e leva um campo oculto `TokenRascunho` (assinado e com validade de 2 h, `ReferenciaRascunho`). Reenvio sem anexar usa o arquivo guardado; anexar outro substitui; o rascunho e apagado no sucesso e os vencidos sao varridos a cada novo rascunho. Arquivo invalido nunca e guardado.
+
+Suite em 333 testes.
+
+**Pretensao salarial:** mascara de reais (R$ 12.000,00) em candidatar.js; o servidor ja aceitava o formato. **Icone da aba:** o portal do RH (login e area logada) usa o mesmo logo da vitrine (teste em CandidaturaTestes).

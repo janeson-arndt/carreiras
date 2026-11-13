@@ -192,6 +192,15 @@ a.vaga .ver { font-weight: 600; color: var(--c-verde-texto); }
 .form-candidatura .ajuda { font-size: 14px; color: var(--c-cinza-texto); margin-top: 4px; }
 .form-candidatura .erro-campo { font-size: 15px; color: #B02A37; font-weight: 600; margin-top: 4px; }
 .form-candidatura .erro-campo[hidden] { display: none; }
+.form-candidatura .campo-cidade { position: relative; }
+.form-candidatura .sugestoes { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: 2px 0 0; padding: 4px 0; list-style: none;
+  background: #fff; border: 1px solid #ced4da; border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.14); max-height: 320px; overflow-y: auto; }
+.form-candidatura .sugestoes[hidden] { display: none; }
+.form-candidatura .sugestoes li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 12px; cursor: pointer; font-size: 17px; }
+.form-candidatura .sugestoes li .uf { color: var(--c-cinza-texto); font-size: 15px; }
+.form-candidatura .sugestoes li:hover, .form-candidatura .sugestoes li.ativo { background: #E3F1E8; }
+.form-candidatura .arquivo-mantido { background: #EEF6F0; border-left: 4px solid #019641; padding: 8px 12px; margin: 8px 0 0; color: #1F2A24; }
+.form-candidatura .arquivo-mantido[hidden] { display: none; }
 .form-candidatura .form-check { padding-left: 1.9em; }
 .form-candidatura .form-check-input { width: 1.3em; height: 1.3em; margin-left: -1.9em; }
 .form-candidatura .btn { margin-top: 6px; }

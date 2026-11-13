@@ -97,6 +97,7 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
         public int? RespostaErrada;
         public string? Isca;
         public bool SemAntiforgery;
+        public string? Rascunho;
     }
 
     private async Task<HttpResponseMessage> EnviarAsync(Envio e, HttpClient? c = null)
@@ -113,6 +114,7 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
         Campo("Cidade", e.Cidade); Campo("Uf", e.Uf); Campo("PretensaoSalarial", e.Pretensao);
         Campo("Aceite", e.Aceite ? "true" : "false");
         Campo("site", e.Isca);
+        Campo("TokenRascunho", e.Rascunho);
         if (e.Arquivo != null) mp.Add(new ByteArrayContent(e.Arquivo), "Curriculo", e.ArquivoNome);
         return await c.PostAsync(e.Slug == null ? "/banco-de-talentos" : $"/candidatar?vaga={e.Slug}", mp);
     }
@@ -168,6 +170,126 @@ VALUES (@s, @t, N'Descrição da vaga de teste.', (SELECT MIN(Id) FROM dbo.Unida
 
     private async Task<int> CandidaturasAsync(string email) => await Contar(
         $"SELECT COUNT(*) FROM dbo.Candidatura x JOIN dbo.Candidato c ON c.Id = x.CandidatoId WHERE c.Email = N'{email}'");
+
+    // ------------------------------------------------------------------ currículo mantido quando o envio volta com críticas
+
+    private string PastaRascunho => Path.Combine(_pastaCurriculos, "rascunho");
+    private string[] Rascunhos() => Directory.Exists(PastaRascunho) ? Directory.GetFiles(PastaRascunho) : Array.Empty<string>();
+
+    private static async Task<string?> TokenRascunhoAsync(HttpResponseMessage r) =>
+        (await Doc(await r.Content.ReadAsStringAsync())).QuerySelector("input[name=TokenRascunho]")?.GetAttribute("value");
+
+    [Fact]
+    public async Task Envio_com_critica_mantem_o_curriculo_e_o_reenvio_sem_anexar_conclui()
+    {
+        var slug = await CriarVagaAsync();
+        var e = Novo(slug); e.RespostaErrada = 1;
+        var r1 = await EnviarAsync(e);
+        Assert.Equal(HttpStatusCode.OK, r1.StatusCode);
+        Assert.Contains("Arquivo mantido: curriculo.pdf", await Txt(r1));
+        var token = await TokenRascunhoAsync(r1);
+        Assert.False(string.IsNullOrEmpty(token));
+        Assert.Single(Rascunhos());
+        Assert.Empty(await EmailsParaAsync(e.Email));
+
+        // segunda tentativa: sem anexar de novo, só com a referência do arquivo mantido
+        e.RespostaErrada = null; e.Arquivo = null; e.Rascunho = token;
+        var r2 = await EnviarAsync(e);
+        Assert.Equal(HttpStatusCode.Redirect, r2.StatusCode);
+        Assert.NotEmpty(await EmailsParaAsync(e.Email));
+        Assert.Single(Directory.GetFiles(_pastaCurriculos)); // o currículo definitivo
+        Assert.Empty(Rascunhos());                          // e o rascunho foi apagado
+    }
+
+    [Fact]
+    public async Task Arquivo_invalido_nao_e_mantido()
+    {
+        var slug = await CriarVagaAsync();
+        var e = Novo(slug); e.RespostaErrada = 1; e.ArquivoNome = "falso.pdf"; e.Arquivo = System.Text.Encoding.ASCII.GetBytes("MZ isto nao e um pdf");
+        var r = await EnviarAsync(e);
+        var txt = await Txt(r);
+        Assert.DoesNotContain("Arquivo mantido", txt);
+        Assert.Null(await TokenRascunhoAsync(r));
+        Assert.Empty(Rascunhos());
+    }
+
+    [Fact]
+    public async Task Referencia_adulterada_ou_inexistente_nao_aceita_arquivo()
+    {
+        var slug = await CriarVagaAsync();
+        var e = Novo(slug); e.Arquivo = null; e.Rascunho = "AAAA-referencia-falsa";
+        var r = await EnviarAsync(e);
+        Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+        Assert.Contains("Anexe seu currículo", await Txt(r));
+        Assert.Empty(await EmailsParaAsync(e.Email));
+    }
+
+    [Fact]
+    public async Task Novo_arquivo_substitui_o_mantido()
+    {
+        var slug = await CriarVagaAsync();
+        var e = Novo(slug); e.RespostaErrada = 1;
+        var r1 = await EnviarAsync(e);
+        var primeiro = Rascunhos().Single();
+
+        e.Arquivo = CandidaturaDominioTestes.Pdf(); e.ArquivoNome = "novo.pdf"; e.Rascunho = await TokenRascunhoAsync(r1);
+        var r2 = await EnviarAsync(e);   // continua com a resposta errada
+        Assert.Contains("Arquivo mantido: novo.pdf", await Txt(r2));
+        var restante = Rascunhos();
+        Assert.Single(restante);
+        Assert.NotEqual(primeiro, restante[0]);
+    }
+
+    [Fact]
+    public async Task Rascunho_vencido_nao_e_usado_e_e_limpo()
+    {
+        var slug = await CriarVagaAsync();
+        var e = Novo(slug); e.RespostaErrada = 1;
+        var r1 = await EnviarAsync(e);
+        var token = await TokenRascunhoAsync(r1);
+        File.SetCreationTimeUtc(Rascunhos().Single(), DateTime.UtcNow.AddHours(-3));
+
+        e.RespostaErrada = null; e.Arquivo = null; e.Rascunho = token;
+        var r2 = await EnviarAsync(e);
+        Assert.Contains("Anexe seu currículo", await Txt(r2));
+        Assert.Empty(await EmailsParaAsync(e.Email));
+
+        // o próximo rascunho varre os vencidos
+        var e2 = Novo(slug); e2.RespostaErrada = 1;
+        await EnviarAsync(e2);
+        Assert.Single(Rascunhos());
+    }
+
+    [Fact]
+    public async Task Formulario_tem_mascara_de_telefone_lista_de_cidades_e_municipios_do_proprio_site()
+    {
+        var slug = await CriarVagaAsync();
+        var r = await _c.GetAsync($"/candidatar?vaga={slug}");
+        var doc = await Doc(await r.Content.ReadAsStringAsync());
+        Assert.NotNull(doc.QuerySelector("#Telefone[placeholder][inputmode=tel]"));
+        Assert.NotNull(doc.QuerySelector("#Cidade[role=combobox][aria-controls=lista-cidades]"));
+        Assert.NotNull(doc.QuerySelector("ul#lista-cidades[role=listbox][hidden]"));
+        var url = doc.QuerySelector("[data-municipios]")!.GetAttribute("data-municipios")!;
+
+        var j = await _c.GetAsync(url);
+        Assert.Equal(HttpStatusCode.OK, j.StatusCode);
+        var json = System.Text.Json.JsonDocument.Parse(await j.Content.ReadAsStringAsync()).RootElement;
+        Assert.Equal(27, json.EnumerateObject().Count());
+        Assert.Contains("Indaial", json.GetProperty("SC").EnumerateArray().Select(x => x.GetString()));
+        Assert.Contains("Timbó", json.GetProperty("SC").EnumerateArray().Select(x => x.GetString()));
+    }
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/admin/entrar")]
+    public async Task Todas_as_telas_usam_o_mesmo_icone_da_aba(string url)
+    {
+        var doc = await Doc(await (await _c.GetAsync(url)).Content.ReadAsStringAsync());
+        // o endereço leva um carimbo de versão (logo.xxxx.png): confere que é o arquivo do logo e que ele existe
+        var href = doc.QuerySelector("link[rel=icon]")?.GetAttribute("href");
+        Assert.Matches(@"^/img/logo(\.[a-z0-9]+)?\.png$", href);
+        Assert.Equal(HttpStatusCode.OK, (await _c.GetAsync(href)).StatusCode);
+    }
 
     // ------------------------------------------------------------------ fluxo completo
 

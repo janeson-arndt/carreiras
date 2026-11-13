@@ -24,11 +24,15 @@ public class CandidatarModel : PageModel
     private readonly ReferenciaEnvio _referencia;
     private readonly LimitadorTentativas _limite;
     private readonly IConfiguration _config;
+    private readonly RascunhoCurriculos _rascunhos;
+    private readonly ReferenciaRascunho _refRascunho;
 
     public CandidatarModel(VitrineServico vitrine, CandidaturaServico candidaturas, DesafioHumano desafio,
-        ReferenciaEnvio referencia, LimitadorTentativas limite, IConfiguration config)
+        ReferenciaEnvio referencia, LimitadorTentativas limite, IConfiguration config,
+        RascunhoCurriculos rascunhos, ReferenciaRascunho refRascunho)
     {
         _vitrine = vitrine; _candidaturas = candidaturas; _desafio = desafio; _referencia = referencia; _limite = limite; _config = config;
+        _rascunhos = rascunhos; _refRascunho = refRascunho;
     }
 
     [BindProperty(SupportsGet = true, Name = "vaga")] public string? Slug { get; set; }
@@ -42,6 +46,10 @@ public class CandidatarModel : PageModel
     [BindProperty] public IFormFile? Curriculo { get; set; }
     [BindProperty] public string? Resposta { get; set; }
     [BindProperty] public string? TokenDesafio { get; set; }
+    /// <summary>Referência ao currículo guardado quando o envio voltou com críticas (a pessoa não precisa anexar de novo).</summary>
+    [BindProperty] public string? TokenRascunho { get; set; }
+    /// <summary>Nome do arquivo guardado, para mostrar na tela.</summary>
+    public string? RascunhoNome { get; private set; }
     /// <summary>Campo-isca: escondido para pessoas; robôs costumam preenchê-lo.</summary>
     [BindProperty(Name = "site")] public string? Isca { get; set; }
 
@@ -90,22 +98,41 @@ public class CandidatarModel : PageModel
             ModelState.AddModelError(nameof(Resposta), "A conta não confere. Tente de novo.");
 
         var dados = new DadosCandidatura(Nome ?? "", Email ?? "", Telefone ?? "", Cidade ?? "", Uf ?? "", pretensao, Aceite);
+
+        // Arquivo do envio: o que veio agora ou, se a pessoa não anexou outro, o guardado no envio anterior (que voltou com críticas).
+        var anterior = _refRascunho.Ler(TokenRascunho);
+        Stream? fluxo = null;
+        string? nomeArquivo = null;
+        string? rascunhoUsado = null;
+        if (Curriculo != null) { fluxo = Curriculo.OpenReadStream(); nomeArquivo = Curriculo.FileName; }
+        else if (anterior is { } a && _rascunhos.Abrir(a.Arquivo) is { } guardado)
+        {
+            fluxo = guardado; nomeArquivo = a.NomeOriginal; rascunhoUsado = a.Arquivo;
+        }
+
         ResultadoEnvio resultado;
-        await using (var fluxo = Curriculo?.OpenReadStream())
+        await using (fluxo)
         {
             if (ModelState.ErrorCount > 0)
             {
                 // ainda valida o resto para mostrar todos os erros de uma vez
                 var erros = ValidacaoCandidatura.Validar(dados);
-                var arq = ArquivoCurriculo.Validar(Curriculo?.FileName, fluxo);
+                var arq = ArquivoCurriculo.Validar(nomeArquivo, fluxo);
                 if (!arq.Ok) erros["Curriculo"] = arq.Erro!;
                 foreach (var (campo, msg) in erros) if (!ModelState.ContainsKey(campo) || ModelState[campo]!.Errors.Count == 0) ModelState.AddModelError(campo, msg);
+                await ManterRascunhoAsync(arq, fluxo, nomeArquivo, rascunhoUsado, anterior?.Arquivo, ct);
                 NovoDesafio();
                 return Page();
             }
 
-            resultado = await _candidaturas.EnviarAsync(Espontanea ? null : Slug, dados, Curriculo?.FileName, fluxo, Ip, LinkConfirmacao, ct);
+            resultado = await _candidaturas.EnviarAsync(Espontanea ? null : Slug, dados, nomeArquivo, fluxo, Ip, LinkConfirmacao, ct);
+
+            // envio recusado por outro motivo (e-mail já usado, erros do serviço...): o arquivo continua guardado para a próxima tentativa
+            if (resultado.Status is not (StatusEnvio.Ok or StatusEnvio.VagaIndisponivel))
+                await ManterRascunhoAsync(ArquivoCurriculo.Validar(nomeArquivo, fluxo), fluxo, nomeArquivo, rascunhoUsado, anterior?.Arquivo, ct);
         }
+
+        if (resultado.Status == StatusEnvio.Ok && anterior is { } usado) _rascunhos.Apagar(usado.Arquivo);
 
         switch (resultado.Status)
         {
@@ -133,7 +160,25 @@ public class CandidatarModel : PageModel
         return Page();
     }
 
-    private string? Ip => HttpContext.Connection.RemoteIpAddress?.ToString();
+    /// <summary>
+    /// A tela volta com críticas: o navegador não devolve o arquivo escolhido, então ele fica guardado por pouco tempo
+    /// no servidor e a tela mostra o nome. Só guarda arquivo que passou na validação (tipo e tamanho).
+    /// </summary>
+    private async Task ManterRascunhoAsync(ResultadoArquivo arq, Stream? fluxo, string? nomeArquivo, string? rascunhoUsado, string? anterior, CancellationToken ct)
+    {
+        var guardado = rascunhoUsado;
+        if (arq.Ok && fluxo != null && guardado == null)
+            guardado = await _rascunhos.SalvarAsync(fluxo, arq.Extensao!, ct);
+
+        // o rascunho do envio anterior some quando um arquivo novo o substitui (ou quando o arquivo não vale mais)
+        if (anterior != null && anterior != guardado) _rascunhos.Apagar(anterior);
+
+        if (guardado == null || !arq.Ok) { TokenRascunho = null; RascunhoNome = null; return; }
+        RascunhoNome = ArquivoCurriculo.NomeParaExibicao(nomeArquivo);
+        TokenRascunho = _refRascunho.Criar(guardado, RascunhoNome);
+    }
+
+    private string? Ip =>HttpContext.Connection.RemoteIpAddress?.ToString();
 
     private string LinkConfirmacao(string token)
     {

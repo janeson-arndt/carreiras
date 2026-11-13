@@ -25,6 +25,7 @@ public static class InfraServicos
         services.Configure<Candidaturas.CandidaturaOpcoes>(config.GetSection("Candidatura"));
         services.Configure<Candidaturas.RetencaoOpcoes>(config.GetSection("Retencao"));
         services.AddSingleton<Candidaturas.ArmazenamentoCurriculos>();
+        services.AddSingleton<Candidaturas.RascunhoCurriculos>();
         services.AddScoped<Candidaturas.CandidaturaServico>();
         services.AddScoped<Candidaturas.RetencaoServico>();
         services.AddScoped<Candidaturas.TitularServico>();

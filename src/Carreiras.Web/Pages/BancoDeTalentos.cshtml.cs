@@ -11,8 +11,9 @@ namespace Carreiras.Web.Pages;
 public class BancoDeTalentosModel : CandidatarModel
 {
     public BancoDeTalentosModel(VitrineServico vitrine, CandidaturaServico candidaturas, DesafioHumano desafio,
-        ReferenciaEnvio referencia, LimitadorTentativas limite, IConfiguration config)
-        : base(vitrine, candidaturas, desafio, referencia, limite, config) { }
+        ReferenciaEnvio referencia, LimitadorTentativas limite, IConfiguration config,
+        RascunhoCurriculos rascunhos, ReferenciaRascunho refRascunho)
+        : base(vitrine, candidaturas, desafio, referencia, limite, config, rascunhos, refRascunho) { }
 
     public override bool Espontanea => true;
 }

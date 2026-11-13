@@ -22,6 +22,7 @@ builder.Services.Configure<Carreiras.Web.Seguranca.LimiteOpcoes>(builder.Configu
 builder.Services.AddSingleton<Carreiras.Web.Seguranca.LimitadorTentativas>();
 builder.Services.AddSingleton<Carreiras.Web.Seguranca.DesafioHumano>();
 builder.Services.AddSingleton<Carreiras.Web.Seguranca.ReferenciaEnvio>();
+builder.Services.AddSingleton<Carreiras.Web.Seguranca.ReferenciaRascunho>();
 builder.Services.AddHostedService<Carreiras.Infra.Candidaturas.RetencaoDiaria>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioAuditoria, UsuarioAuditoriaHttp>();
